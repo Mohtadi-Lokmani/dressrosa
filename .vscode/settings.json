@@ -1,0 +1,18 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "dressrosa_db",
+            "group": "dressrosa_db",
+            "database": "dressrosa_db",
+            "username": "postgres"
+        }
+    ],
+    "java.compile.nullAnalysis.mode": "automatic"
+}

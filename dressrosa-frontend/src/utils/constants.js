@@ -1,0 +1,99 @@
+export const ROLES = {
+  BUYER: 'BUYER',
+  SELLER: 'SELLER',
+};
+
+export const ORDER_STATUS = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+};
+
+export const PRODUCT_STATUS = {
+  IN_STOCK: 'IN_STOCK',
+  SOLD_OUT: 'SOLD_OUT',
+};
+
+export const NOTIFICATION_TYPES = {
+  MESSAGE: 'MESSAGE',
+  ORDER: 'ORDER',
+  FOLLOW: 'FOLLOW',
+  LIKE: 'LIKE',
+  REVIEW: 'REVIEW',
+};
+
+export const ROUTES = {
+  // Public
+  HOME: '/',
+  FOLLOWING: '/following',
+  SHOP: '/shop',
+  PRODUCT_DETAIL: '/products/:id',
+  SELLER_PUBLIC: '/seller/:id',
+  
+  // Auth
+  LOGIN: '/login',
+  REGISTER: '/register',
+  
+  // Buyer
+  CART: '/cart',
+  CHECKOUT: '/checkout',
+  ORDERS: '/orders',
+  ORDER_DETAIL: '/orders/:id',
+  WISHLIST: '/wishlist',
+  PROFILE: '/profile',
+  MESSAGES: '/messages',
+  NOTIFICATIONS: '/notifications',
+  
+  // Seller
+  SELLER_DASHBOARD: '/seller/dashboard',
+  ADD_PRODUCT: '/seller/products/add',
+  EDIT_PRODUCT: '/seller/products/edit/:id',
+  MY_PRODUCTS: '/seller/products',
+  MY_SALES: '/seller/sales',
+  MANAGE_ORDER: '/seller/orders/:id',
+  FOLLOWERS: '/seller/followers',
+  
+  // Error
+  NOT_FOUND: '*',
+  UNAUTHORIZED: '/unauthorized',
+};
+
+export const SORT_OPTIONS = [
+  { value: 'createdAt,desc', label: 'Newest First' },
+  { value: 'createdAt,asc', label: 'Oldest First' },
+  { value: 'price,asc', label: 'Price: Low to High' },
+  { value: 'price,desc', label: 'Price: High to Low' },
+  { value: 'title,asc', label: 'Name: A to Z' },
+  { value: 'title,desc', label: 'Name: Z to A' },
+];
+
+export const PAGINATION = {
+  DEFAULT_PAGE: 0,
+  DEFAULT_SIZE: 20,
+  SIZE_OPTIONS: [10, 20, 50, 100],
+};
+
+export const CATEGORY_TABS = [
+  { id: null, name: 'All', slug: 'all' },
+  { id: 1, name: 'Men', slug: 'men' },
+  { id: 2, name: 'Women', slug: 'women' },
+  { id: 3, name: 'Accessories', slug: 'accessories' },
+  { id: 4, name: 'Shoes', slug: 'shoes' },
+];
+
+export const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+
+export const COLORS = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Red', hex: '#EF4444' },
+  { name: 'Blue', hex: '#3B82F6' },
+  { name: 'Green', hex: '#10B981' },
+  { name: 'Yellow', hex: '#F59E0B' },
+  { name: 'Purple', hex: '#8B5CF6' },
+  { name: 'Pink', hex: '#EC4899' },
+  { name: 'Gray', hex: '#6B7280' },
+  { name: 'Brown', hex: '#92400E' },
+];
