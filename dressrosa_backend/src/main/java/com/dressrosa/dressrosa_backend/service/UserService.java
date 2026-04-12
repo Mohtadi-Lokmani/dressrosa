@@ -198,6 +198,7 @@ public class UserService {
         // Add statistics
         dto.setTotalProducts(productRepository.countBySellerUserId(sellerId));
         dto.setFollowersCount(followRepository.countByFollowingUserId(sellerId));
+        dto.setFollowingCount(followRepository.countByFollowerUserId(sellerId));
         
         // Calculate average rating from all seller's products
         // This would require a custom query - simplified for now
@@ -294,6 +295,11 @@ public class UserService {
         dto.setIsVerified(user.getIsVerified());
         dto.setVerificationBadge(user.getVerificationBadge());
         dto.setCreatedAt(user.getCreatedAt());
+        
+        // Populate stats
+        dto.setFollowersCount(followRepository.countByFollowingUserId(user.getUserId()));
+        dto.setFollowingCount(followRepository.countByFollowerUserId(user.getUserId()));
+        dto.setTotalProducts(productRepository.countBySellerUserId(user.getUserId()));
         
         return dto;
     }

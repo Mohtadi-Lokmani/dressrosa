@@ -37,7 +37,7 @@ const SellerProfilePage = () => {
 
       if (currentUser) {
         const followStatus = await socialService.checkFollow(id);
-        setIsFollowing(followStatus.isFollowing);
+        setIsFollowing(followStatus);
       }
 
       fetchSellerProducts();
@@ -129,6 +129,10 @@ const SellerProfilePage = () => {
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">{seller.followersCount || 0}</p>
                   <p className="text-sm text-gray-600">Followers</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">{seller.followingCount || 0}</p>
+                  <p className="text-sm text-gray-600">Following</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center space-x-1">

@@ -18,4 +18,9 @@ public class UserDTO {
     private Boolean isVerified;
     private Boolean verificationBadge;
     private LocalDateTime createdAt;
+    
+    // Statistics
+    private Long followersCount;
+    private Long followingCount;
+    private Long totalProducts;
 }

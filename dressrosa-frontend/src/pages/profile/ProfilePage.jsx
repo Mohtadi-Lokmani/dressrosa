@@ -42,28 +42,29 @@ const ProfilePage = () => {
     try {
       setLoading(true);
       
+      let data;
       if (isOwnProfile) {
         // Fetch own profile
-        const data = await userService.getMyProfile();
+        data = await userService.getMyProfile();
         setUser(data);
         updateUser(data);
       } else {
         // Fetch other user's profile
-        const data = await userService.getUserById(id);
+        data = await userService.getUserById(id);
         setUser(data);
         
         // Check if following (if seller)
         if (data.role === 'SELLER') {
           const followStatus = await socialService.checkFollow(id);
-          setIsFollowing(followStatus.isFollowing);
+          setIsFollowing(followStatus);
         }
       }
 
-      // Fetch stats (mock for now, you can add backend endpoints)
+      // Populate stats from user data
       setStats({
-        followers: 0,
-        following: 0,
-        products: 0,
+        followers: data.followersCount || 0,
+        following: data.followingCount || 0,
+        products: data.totalProducts || 0,
       });
 
       if (isOwnProfile) {

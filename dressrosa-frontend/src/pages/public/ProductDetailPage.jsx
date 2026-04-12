@@ -50,7 +50,7 @@ const ProductDetailPage = () => {
       }
       
       // Check if liked/saved/following
-      checkSocialStatus();
+      checkSocialStatus(data.sellerId);
       
       // Fetch reviews
       fetchReviews();
@@ -62,18 +62,18 @@ const ProductDetailPage = () => {
     }
   };
 
-  const checkSocialStatus = async () => {
+  const checkSocialStatus = async (sellerId) => {
     try {
       const [likeStatus, saveStatus, followStatus] = await Promise.all([
-        socialService.checkLike(id).catch(() => ({ isLiked: false })),
-        socialService.checkSave(id).catch(() => ({ isSaved: false })),
-        product?.sellerId
-          ? socialService.checkFollow(product.sellerId).catch(() => ({ isFollowing: false }))
-          : Promise.resolve({ isFollowing: false }),
+        socialService.checkLike(id).catch(() => false),
+        socialService.checkSave(id).catch(() => false),
+        sellerId
+          ? socialService.checkFollow(sellerId).catch(() => false)
+          : Promise.resolve(false),
       ]);
-      setIsLiked(likeStatus.isLiked);
-      setIsSaved(saveStatus.isSaved);
-      setIsFollowing(followStatus.isFollowing);
+      setIsLiked(likeStatus);
+      setIsSaved(saveStatus);
+      setIsFollowing(followStatus);
     } catch (error) {
       console.error('Error checking social status:', error);
     }
