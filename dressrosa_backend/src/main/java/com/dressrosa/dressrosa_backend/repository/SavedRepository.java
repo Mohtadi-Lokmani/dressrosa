@@ -15,6 +15,9 @@ public interface SavedRepository extends JpaRepository<Saved, Long> {
     // Find all saved products for a user
     List<Saved> findByUserUserId(Long userId);
     Page<Saved> findByUserUserId(Long userId, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT s.product FROM Saved s WHERE s.user.userId = :userId ORDER BY s.savedAt DESC")
+    Page<com.dressrosa.dressrosa_backend.model.Product> findSavedProductsByUserId(@org.springframework.data.repository.query.Param("userId") Long userId, Pageable pageable);
     
     // Find specific saved item
     Optional<Saved> findByUserUserIdAndProductProductId(Long userId, Long productId);

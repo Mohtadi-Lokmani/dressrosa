@@ -67,7 +67,7 @@ public class SocialController {
         String email = SecurityUtil.getCurrentUserEmail();
         UserDTO currentUser = userService.getCurrentUser(email);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("likedAt").descending());
         Page<com.dressrosa.dressrosa_backend.dto.product.ProductListResponse> products = socialService.getLikedProducts(currentUser.getUserId(), pageable);
         
         return ResponseEntity.ok(products);
@@ -100,6 +100,19 @@ public class SocialController {
         
         boolean saved = socialService.hasSaved(productId, currentUser.getUserId());
         return ResponseEntity.ok(saved);
+    }
+    
+    @GetMapping("/save/my-saved")
+    public ResponseEntity<Page<com.dressrosa.dressrosa_backend.dto.product.ProductListResponse>> getMySaved(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("savedAt").descending());
+        Page<com.dressrosa.dressrosa_backend.dto.product.ProductListResponse> products = socialService.getSavedProducts(currentUser.getUserId(), pageable);
+        
+        return ResponseEntity.ok(products);
     }
     
     @PostMapping("/reviews")

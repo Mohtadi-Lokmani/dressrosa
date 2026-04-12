@@ -19,13 +19,9 @@ const WishlistPage = () => {
   const fetchWishlist = async () => {
     try {
       setLoading(true);
-      // Note: You'll need to create this endpoint in your backend
-      // For now, this is a placeholder
-      // const data = await socialService.getMySavedProducts();
-      // setProducts(data || []);
-      
-      // Mock data for now
-      setProducts([]);
+      const data = await socialService.getMySavedProducts();
+      // Handle potential pagination response
+      setProducts(data.content || data || []);
     } catch (error) {
       console.error('Error fetching wishlist:', error);
       toast.error('Failed to load wishlist');

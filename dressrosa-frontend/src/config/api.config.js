@@ -63,6 +63,7 @@ export const ENDPOINTS = {
     SAVE: (productId) => `/api/social/save/${productId}`,
     UNSAVE: (productId) => `/api/social/save/${productId}`,
     CHECK_SAVE: (productId) => `/api/social/save/${productId}/check`,
+    MY_SAVED: '/api/social/save/my-saved',
     
     FOLLOW: (sellerId) => `/api/social/follow/${sellerId}`,
     UNFOLLOW: (sellerId) => `/api/social/follow/${sellerId}`,

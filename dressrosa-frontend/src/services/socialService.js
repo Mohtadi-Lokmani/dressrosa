@@ -62,6 +62,14 @@ export const socialService = {
     return response.data;
   },
 
+  /**
+   * Get my wishlist (saved products)
+   */
+  getMySavedProducts: async (params = {}) => {
+    const response = await api.get(ENDPOINTS.SOCIAL.MY_SAVED, { params });
+    return response.data;
+  },
+
   // ========== FOLLOW ==========
   
   /**

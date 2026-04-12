@@ -29,6 +29,7 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('likes');
   const [likes, setLikes] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [savedItems, setSavedItems] = useState([]);
   const [loadingActivity, setLoadingActivity] = useState(false);
 
   const isOwnProfile = !id || parseInt(id) === currentUser?.userId;
@@ -79,12 +80,14 @@ const ProfilePage = () => {
   const fetchActivityData = async () => {
     try {
       setLoadingActivity(true);
-      const [likesData, reviewsData] = await Promise.all([
+      const [likesData, reviewsData, savedData] = await Promise.all([
         socialService.getMyLikes(),
-        socialService.getMyReviews()
+        socialService.getMyReviews(),
+        socialService.getMySavedProducts()
       ]);
       setLikes(likesData.content || likesData || []);
       setReviews(reviewsData.content || reviewsData || []);
+      setSavedItems(savedData.content || savedData || []);
     } catch (error) {
       console.error('Error fetching activity data:', error);
     } finally {
@@ -304,6 +307,16 @@ const ProfilePage = () => {
             >
               My Reviews ({reviews.length})
             </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'saved'
+                  ? 'border-burgundy text-burgundy'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Wishlist ({savedItems.length})
+            </button>
           </div>
 
           {loadingActivity ? (
@@ -319,6 +332,18 @@ const ProfilePage = () => {
               ) : (
                 <div className="col-span-full py-12 text-center text-gray-500">
                   You haven't liked any products yet.
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'saved' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {savedItems.length > 0 ? (
+                savedItems.map((product) => (
+                  <ProductFeedCard key={product.productId} product={product} />
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-gray-500">
+                  You haven't saved any products yet.
                 </div>
               )}
             </div>

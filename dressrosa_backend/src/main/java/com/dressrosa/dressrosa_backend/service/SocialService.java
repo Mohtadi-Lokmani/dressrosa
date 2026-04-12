@@ -211,8 +211,8 @@ public class SocialService {
      * - "My Saved Items" / "Wishlist" page
      */
     public Page<ProductListResponse> getSavedProducts(Long userId, Pageable pageable) {
-        // Would need custom query to join Saved → Product
-        throw new RuntimeException("Not implemented yet");
+        Page<Product> products = savedRepository.findSavedProductsByUserId(userId, pageable);
+        return products.map(this::convertToListResponse);
     }
     
     // ============================================
