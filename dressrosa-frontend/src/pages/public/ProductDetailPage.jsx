@@ -67,8 +67,8 @@ const ProductDetailPage = () => {
       const [likeStatus, saveStatus, followStatus] = await Promise.all([
         socialService.checkLike(id).catch(() => ({ isLiked: false })),
         socialService.checkSave(id).catch(() => ({ isSaved: false })),
-        product?.seller?.userId
-          ? socialService.checkFollow(product.seller.userId).catch(() => ({ isFollowing: false }))
+        product?.sellerId
+          ? socialService.checkFollow(product.sellerId).catch(() => ({ isFollowing: false }))
           : Promise.resolve({ isFollowing: false }),
       ]);
       setIsLiked(likeStatus.isLiked);
@@ -121,14 +121,14 @@ const ProductDetailPage = () => {
   };
 
   const handleFollow = async () => {
-    if (!product?.seller?.userId) return;
+    if (!product?.sellerId) return;
 
     try {
       if (isFollowing) {
-        await socialService.unfollowSeller(product.seller.userId);
+        await socialService.unfollowSeller(product.sellerId);
         toast.success('Unfollowed seller');
       } else {
-        await socialService.followSeller(product.seller.userId);
+        await socialService.followSeller(product.sellerId);
         toast.success('Following seller');
       }
       setIsFollowing(!isFollowing);
@@ -464,16 +464,16 @@ const ProductDetailPage = () => {
             <div className="bg-white rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between">
                 <Link
-                  to={`/seller/${product.seller?.userId}`}
+                  to={`/seller/${product.sellerId}`}
                   className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
                 >
                   <Avatar
-                    src={product.seller?.profileImage}
-                    name={product.seller?.userName}
+                    src={product.sellerProfileImage || undefined}
+                    name={product.sellerName || 'Unknown User'}
                     size="lg"
                   />
                   <div>
-                    <p className="font-semibold text-gray-900">{product.seller?.userName}</p>
+                    <p className="font-semibold text-gray-900">{product.sellerName || 'Unknown User'}</p>
                     <p className="text-sm text-gray-500">View Profile</p>
                   </div>
                 </Link>

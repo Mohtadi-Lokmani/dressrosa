@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Lock, Bell, Globe, Shield, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { userService } from '../../services/userService';
 import Container from '../../components/layout/Container';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -13,6 +14,7 @@ const SettingsPage = () => {
   const { logout } = useAuthStore();
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -27,8 +29,17 @@ const SettingsPage = () => {
       return;
     }
 
+    if (passwordData.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+
     try {
-      // TODO: Implement password change API
+      setChangingPassword(true);
+      await userService.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
       toast.success('Password updated successfully!');
       setPasswordData({
         currentPassword: '',
@@ -37,7 +48,10 @@ const SettingsPage = () => {
       });
     } catch (error) {
       console.error('Error changing password:', error);
-      toast.error('Failed to change password');
+      const msg = error.response?.data?.message || 'Failed to change password';
+      toast.error(msg);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -101,7 +115,7 @@ const SettingsPage = () => {
                 onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                 required
               />
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="primary" loading={changingPassword}>
                 Update Password
               </Button>
             </form>

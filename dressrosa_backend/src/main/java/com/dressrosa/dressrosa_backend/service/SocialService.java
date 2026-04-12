@@ -40,6 +40,9 @@ public class SocialService {
     @Autowired
     private NotificationService notificationService;
     
+    @Autowired
+    private ProductMediaRepository productMediaRepository;
+    
     // ============================================
     // LIKE FUNCTIONALITY
     // ============================================
@@ -132,9 +135,8 @@ public class SocialService {
      * @return Page of liked products
      */
     public Page<ProductListResponse> getLikedProducts(Long userId, Pageable pageable) {
-        // This requires a custom query - simplified implementation
-        // Would need to join Like → Product tables
-        throw new RuntimeException("Not implemented yet");
+        Page<Product> products = likeRepository.findLikedProductsByUserId(userId, pageable);
+        return products.map(this::convertToListResponse);
     }
     
     // ============================================
@@ -472,5 +474,34 @@ public class SocialService {
         dto.setAverageRating(4.5); // TODO: Calculate from reviews
         
         return dto;
+    }
+    
+    private ProductListResponse convertToListResponse(Product product) {
+        ProductListResponse response = new ProductListResponse();
+        
+        response.setProductId(product.getProductId());
+        response.setTitle(product.getTitle());
+        response.setPrice(product.getPrice());
+        response.setStatus(product.getStatus());
+        response.setViewsCount(product.getViewsCount());
+        response.setIsBoosted(product.getIsBoosted());
+        response.setCreatedAt(product.getCreatedAt());
+        
+        // First image only
+        List<ProductMedia> media = productMediaRepository.findByProductProductId(product.getProductId());
+        if (!media.isEmpty()) {
+            response.setImageUrl(media.get(0).getUrl());
+        }
+        
+        // Seller
+        response.setSellerId(product.getSeller().getUserId());
+        response.setSellerName(product.getSeller().getUserName());
+        response.setSellerVerified(product.getSeller().getVerificationBadge());
+        
+        // Quick stats
+        response.setLikesCount((long) likeRepository.countByProductProductId(product.getProductId()));
+        response.setAverageRating(reviewRepository.getAverageRating(product.getProductId()));
+        
+        return response;
     }
 }

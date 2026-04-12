@@ -13,7 +13,7 @@ export const useCartStore = create((set, get) => ({
       const data = await cartService.getCart();
       set({
         cart: data,
-        itemCount: data.items?.length || 0,
+        itemCount: data.totalItems || data.items?.length || 0,
         loading: false,
       });
     } catch (error) {
@@ -69,9 +69,12 @@ export const useCartStore = create((set, get) => ({
   // Calculate total
   getTotal: () => {
     const { cart } = get();
-    if (!cart || !cart.items) return 0;
+    if (!cart) return 0;
+    // Use backend-calculated totalPrice if available
+    if (cart.totalPrice) return Number(cart.totalPrice);
+    if (!cart.items) return 0;
     return cart.items.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
+      return sum + (Number(item.productPrice || 0) * item.quantity);
     }, 0);
   },
 }));

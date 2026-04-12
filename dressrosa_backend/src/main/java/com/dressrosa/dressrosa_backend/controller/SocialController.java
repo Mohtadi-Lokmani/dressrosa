@@ -60,6 +60,19 @@ public class SocialController {
         return ResponseEntity.ok(liked);
     }
     
+    @GetMapping("/like/my-likes")
+    public ResponseEntity<Page<com.dressrosa.dressrosa_backend.dto.product.ProductListResponse>> getMyLikes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<com.dressrosa.dressrosa_backend.dto.product.ProductListResponse> products = socialService.getLikedProducts(currentUser.getUserId(), pageable);
+        
+        return ResponseEntity.ok(products);
+    }
+    
     @PostMapping("/save/{productId}")
     public ResponseEntity<ApiResponse> saveProduct(@PathVariable Long productId) {
         String email = SecurityUtil.getCurrentUserEmail();

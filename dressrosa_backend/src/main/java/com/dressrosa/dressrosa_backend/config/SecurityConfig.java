@@ -1,7 +1,11 @@
 package com.dressrosa.dressrosa_backend.config;
 import java.util.Collections;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -63,6 +67,7 @@ public class SecurityConfig {
              "/api/products/**",       
              "/api/products/public/**", 
               "/api/categories/**",      
+             "/uploads/**",
              "/error"
             ).permitAll()
             .anyRequest().authenticated()

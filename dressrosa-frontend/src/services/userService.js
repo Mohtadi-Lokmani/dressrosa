@@ -27,6 +27,26 @@ export const userService = {
   },
 
   /**
+   * Change password
+   */
+  changePassword: async (passwordData) => {
+    const response = await api.put(ENDPOINTS.USERS.CHANGE_PASSWORD, passwordData);
+    return response.data;
+  },
+
+  /**
+   * Upload profile photo
+   */
+  uploadPhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(ENDPOINTS.USERS.UPLOAD_PHOTO, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  /**
    * Get seller profile (public)
    */
   getSellerProfile: async (sellerId) => {

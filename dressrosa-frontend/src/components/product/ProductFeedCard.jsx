@@ -1,16 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Share2, Flag } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import { formatPrice } from '../../utils/formatters';
+import { socialService } from '../../services/socialService';
+import toast from 'react-hot-toast';
 
 const ProductFeedCard = ({ product, onLike, onSave }) =>  {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLiked, setIsLiked] = useState(product.isLiked || false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [likingInProgress, setLikingInProgress] = useState(false);
+  const menuRef = useRef(null);
 
   const images = product.media?.filter(m => m.type === 'IMAGE') || [];
   const hasMultipleImages = images.length > 1;
+
+  // Check initial like/save status
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const [liked, saved] = await Promise.all([
+          socialService.checkLike(product.productId),
+          socialService.checkSave(product.productId),
+        ]);
+        setIsLiked(liked);
+        setIsSaved(saved);
+      } catch (error) {
+        // Silently fail - default to false
+      }
+    };
+    if (product.productId) checkStatus();
+  }, [product.productId]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const nextImage = (e) => {
     e.preventDefault();
@@ -24,10 +58,41 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
 
   const handleLike = async (e) => {
     e.preventDefault();
-    setIsLiked(!isLiked);
-    if (onLike) {
-      await onLike(product.productId);
+    if (likingInProgress) return;
+    setLikingInProgress(true);
+    
+    try {
+      if (isLiked) {
+        await socialService.unlikeProduct(product.productId);
+        setIsLiked(false);
+      } else {
+        await socialService.likeProduct(product.productId);
+        setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
+    } finally {
+      setLikingInProgress(false);
     }
+  };
+
+  const handleSave = async () => {
+    try {
+      if (isSaved) {
+        await socialService.unsaveProduct(product.productId);
+        setIsSaved(false);
+        toast.success('Removed from wishlist');
+      } else {
+        await socialService.saveProduct(product.productId);
+        setIsSaved(true);
+        toast.success('Saved to wishlist!');
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast.error('Failed to update wishlist');
+    }
+    setShowMenu(false);
   };
 
   // Calculate average rating
@@ -35,30 +100,70 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
   const reviewCount = product.reviewCount || 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
-      {/* Header - Seller Info */}
-      <div className="flex items-center justify-between p-4">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden relative border border-gray-100">
+      {/* Seller Header & Menu */}
+      <div className="p-3 bg-white flex items-center justify-between border-b border-gray-50">
         <Link
-          to={`/seller/${product.seller?.userId}`}
+          to={`/seller/${product.sellerId}`}
           className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
         >
           <Avatar
-            src={product.seller?.profileImage}
-            name={product.seller?.userName}
-            size="md"
+            src={product.sellerProfileImage || undefined}
+            name={product.sellerName || 'Unknown User'}
+            size="sm"
           />
           <div>
-            <p className="font-semibold text-gray-900">{product.seller?.userName}</p>
+            <p className="font-semibold text-gray-900 text-sm">{product.sellerName || 'Unknown User'}</p>
             <p className="text-xs text-gray-500">
-              {product.category?.name || 'Fashion'}
+              {product.categoryName || 'Fashion'} Seller
             </p>
           </div>
         </Link>
+        
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <MoreHorizontal className="w-5 h-5 text-gray-600" />
+          </button>
 
-        {/* Menu Button */}
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <MoreHorizontal className="w-5 h-5 text-gray-600" />
-        </button>
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 animate-fade-in">
+              <button
+                onClick={handleSave}
+                className="w-full flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-burgundy text-burgundy' : 'text-gray-600'}`} />
+                <span className="text-sm text-gray-700">
+                  {isSaved ? 'Remove from Wishlist' : 'Save to Wishlist'}
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.origin + `/products/${product.productId}`);
+                  toast.success('Link copied!');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              >
+                <Share2 className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Copy Link</span>
+              </button>
+              <button
+                onClick={() => {
+                  toast.info('Report feature coming soon');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              >
+                <Flag className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Report</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Product Images Carousel */}
@@ -154,7 +259,7 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
           <Link
             to={`/products/${product.productId}`}
             className="text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors"
@@ -165,7 +270,8 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
           {/* Like Button */}
           <button
             onClick={handleLike}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
+            disabled={likingInProgress}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors group disabled:opacity-50"
           >
             <Heart
               className={`w-5 h-5 transition-colors ${

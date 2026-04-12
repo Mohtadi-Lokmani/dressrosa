@@ -8,28 +8,30 @@ import NotificationsDropdown from './dropdowns/NotificationsDropdown';
 import ProfileDropdown from './dropdowns/ProfileDropdown';
 import { useCartStore } from '../../store/cartStore';
 import { messageService } from '../../services/messageService';
+import { notificationService } from '../../services/notificationService';
 
 const Navbar = () => {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { itemCount, fetchCart } = useCartStore();
+
   useEffect(() => {
-  fetchCart();
-}, []);
+    fetchCart();
+  }, []);
 
-useEffect(() => {
-  fetchUnreadCount();
-  const interval = setInterval(fetchUnreadCount, 5000); // Poll every 5 seconds
-  return () => clearInterval(interval);
-}, []);
-
-  // Mock counts - will be replaced with real data from stores
-  const cartCount = 3;
-  const messagesCount = 5;
-  const notificationsCount = 6;
+  useEffect(() => {
+    fetchUnreadCount();
+    fetchNotificationCount();
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      fetchNotificationCount();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -56,13 +58,22 @@ useEffect(() => {
   };
 
   const fetchUnreadCount = async () => {
-  try {
-    const count = await messageService.getUnreadCount();
-    setUnreadMessageCount(count || 0);
-  } catch (error) {
-    console.error('Error fetching unread count:', error);
-  }
-};
+    try {
+      const count = await messageService.getUnreadCount();
+      setUnreadMessageCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching unread message count:', error);
+    }
+  };
+
+  const fetchNotificationCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadNotificationCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-20 right-0 h-16 bg-white border-b border-gray-200 z-40 flex items-center px-6">
@@ -89,9 +100,9 @@ useEffect(() => {
             className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
           >
             <ShoppingCart className="w-6 h-6 text-gray-700" />
-            {cartCount > 0 && (
+            {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-burgundy text-white text-xs rounded-full flex items-center justify-center font-medium">
-                {cartCount > 9 ? '9+' : cartCount}
+                {itemCount > 9 ? '9+' : itemCount}
               </span>
             )}
           </button>
@@ -105,17 +116,11 @@ useEffect(() => {
             className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
           >
             <MessageCircle className="w-6 h-6 text-gray-700" />
-            {messagesCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                {messagesCount > 9 ? '9+' : messagesCount}
-              </span>
-              
-            )}
             {unreadMessageCount > 0 && (
-  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-    {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-  </span>
-)}
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+              </span>
+            )}
           </button>
           {openDropdown === 'messages' && <MessagesDropdown onClose={() => setOpenDropdown(null)} />}
         </div>
@@ -127,9 +132,9 @@ useEffect(() => {
             className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
           >
             <Bell className="w-6 h-6 text-gray-700" />
-            {notificationsCount > 0 && (
+            {unreadNotificationCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                {notificationsCount > 9 ? '9+' : notificationsCount}
+                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
               </span>
             )}
           </button>

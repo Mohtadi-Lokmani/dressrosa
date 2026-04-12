@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, Camera } from 'lucide-react';
 import { userService } from '../../services/userService';
@@ -12,10 +12,13 @@ import toast from 'react-hot-toast';
 
 const EditProfilePage = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuthStore();
+  const { user, updateUser, setAuth } = useAuthStore();
+  const fileInputRef = useRef(null);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState(null);
   const [formData, setFormData] = useState({
     userName: '',
     email: '',
@@ -54,20 +57,65 @@ const EditProfilePage = () => {
 
     try {
       setSaving(true);
-      const updatedUser = await userService.updateProfile(formData);
+      const response = await userService.updateProfile(formData);
+      
+      // response is now { user, token? }
+      const updatedUser = response.user || response;
       updateUser(updatedUser);
+      
+      // If token was returned (email changed), update stored token
+      if (response.token) {
+        setAuth(updatedUser, response.token);
+      }
+      
       toast.success('Profile updated successfully!');
       navigate('/profile');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      const msg = error.response?.data?.message || 'Failed to update profile';
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
   const handleImageUpload = () => {
-    toast.info('Image upload coming soon!');
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB');
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => setPreviewPhoto(e.target.result);
+    reader.readAsDataURL(file);
+
+    try {
+      setUploading(true);
+      const result = await userService.uploadPhoto(file);
+      updateUser({ ...user, profilePhoto: result.photoUrl });
+      toast.success('Photo updated successfully!');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+      setPreviewPhoto(null);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -94,16 +142,24 @@ const EditProfilePage = () => {
               {/* Profile Picture */}
               <div className="flex items-center space-x-6">
                 <Avatar
-                  src={user?.profileImage}
+                  src={previewPhoto || user?.profilePhoto || user?.profileImage}
                   name={user?.userName}
                   size="2xl"
                 />
                 <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
                   <Button
                     type="button"
                     variant="outline"
                     icon={Camera}
                     onClick={handleImageUpload}
+                    loading={uploading}
                   >
                     Change Photo
                   </Button>

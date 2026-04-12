@@ -10,6 +10,7 @@ import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import { formatDate } from '../../utils/formatters';
+import ProductFeedCard from '../../components/product/ProductFeedCard';
 import toast from 'react-hot-toast';
 const ProfilePage = () => {
   const { id } = useParams();
@@ -24,6 +25,11 @@ const ProfilePage = () => {
     following: 0,
     products: 0,
   });
+
+  const [activeTab, setActiveTab] = useState('likes');
+  const [likes, setLikes] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   const isOwnProfile = !id || parseInt(id) === currentUser?.userId;
 
@@ -58,11 +64,31 @@ const ProfilePage = () => {
         following: 0,
         products: 0,
       });
+
+      if (isOwnProfile) {
+        fetchActivityData();
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActivityData = async () => {
+    try {
+      setLoadingActivity(true);
+      const [likesData, reviewsData] = await Promise.all([
+        socialService.getMyLikes(),
+        socialService.getMyReviews()
+      ]);
+      setLikes(likesData.content || likesData || []);
+      setReviews(reviewsData.content || reviewsData || []);
+    } catch (error) {
+      console.error('Error fetching activity data:', error);
+    } finally {
+      setLoadingActivity(false);
     }
   };
 
@@ -254,14 +280,76 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {/* Recent Activity or Products (if seller) */}
+        {/* Recent Activity or Products */}
         <div className="bg-white rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            {user.role === 'SELLER' ? 'Products' : 'Activity'}
-          </h2>
-          <p className="text-gray-500 text-center py-12">
-            Coming soon...
-          </p>
+          {/* Tabs */}
+          <div className="flex items-center space-x-6 border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('likes')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'likes'
+                  ? 'border-burgundy text-burgundy'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              My Likes ({likes.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'reviews'
+                  ? 'border-burgundy text-burgundy'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              My Reviews ({reviews.length})
+            </button>
+          </div>
+
+          {loadingActivity ? (
+            <div className="py-12 flex justify-center">
+              <div className="spinner"></div>
+            </div>
+          ) : activeTab === 'likes' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {likes.length > 0 ? (
+                likes.map((product) => (
+                  <ProductFeedCard key={product.productId} product={product} />
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-gray-500">
+                  You haven't liked any products yet.
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.reviewId} className="border-b border-gray-100 pb-6 last:border-0">
+                    <div className="flex justify-between items-start mb-2">
+                       <div>
+                         <h4 className="font-medium text-gray-900">{review.productTitle}</h4>
+                         <div className="flex items-center space-x-1 mt-1">
+                           {[...Array(5)].map((_, i) => (
+                             <span key={i} className={`text-sm ${i < review.rate ? 'text-yellow-400' : 'text-gray-300'}`}>
+                               ★
+                             </span>
+                           ))}
+                         </div>
+                       </div>
+                       <span className="text-sm text-gray-500">{formatDate(review.createdAt || review.date)}</span>
+                    </div>
+                    {review.comment && <p className="text-gray-600 mt-2">{review.comment}</p>}
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-gray-500">
+                  You haven't written any reviews yet.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Container>
     </div>

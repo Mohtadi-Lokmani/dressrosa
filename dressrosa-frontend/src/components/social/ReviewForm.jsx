@@ -15,13 +15,8 @@ const ReviewForm = ({ productId, onSubmit, loading = false }) => {
       return;
     }
 
-    if (!comment.trim()) {
-      toast.error('Please write a review');
-      return;
-    }
-
     try {
-      await onSubmit({ rate: rating, comment: comment.trim() });
+      await onSubmit({ rate: rating, comment: comment.trim() || null });
       // Reset form
       setRating(0);
       setComment('');
@@ -50,10 +45,9 @@ const ReviewForm = ({ productId, onSubmit, loading = false }) => {
         />
       </div>
 
-      {/* Comment Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Your Review <span className="text-red-500">*</span>
+          Your Review <span className="text-gray-400">(optional)</span>
         </label>
         <textarea
           value={comment}
@@ -61,10 +55,9 @@ const ReviewForm = ({ productId, onSubmit, loading = false }) => {
           placeholder="Share your experience with this product..."
           rows={5}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-burgundy focus:border-transparent resize-none"
-          required
         />
         <p className="text-xs text-gray-500 mt-1">
-          Minimum 10 characters ({comment.length}/500)
+          {comment.length}/500 characters
         </p>
       </div>
 
@@ -73,7 +66,7 @@ const ReviewForm = ({ productId, onSubmit, loading = false }) => {
         type="submit"
         variant="primary"
         loading={loading}
-        disabled={rating === 0 || comment.length < 10}
+        disabled={rating === 0}
       >
         Submit Review
       </Button>

@@ -91,7 +91,7 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="bg-gray-50 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
       <Container className="flex-1 flex flex-col py-6 overflow-hidden">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden flex-1 flex">
           {/* Conversations List - Desktop: Always visible, Mobile: Hide when chat open */}

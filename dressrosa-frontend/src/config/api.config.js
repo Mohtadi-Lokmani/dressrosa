@@ -16,6 +16,8 @@ export const ENDPOINTS = {
     ME: '/api/users/me',
     BY_ID: (id) => `/api/users/${id}`,
     UPDATE: '/api/users/me',
+    CHANGE_PASSWORD: '/api/users/me/password',
+    UPLOAD_PHOTO: '/api/users/me/photo',
     SELLER: (id) => `/api/users/seller/${id}`,
     SELLER_DASHBOARD: '/api/users/seller/dashboard',
     BUYER_DASHBOARD: '/api/users/buyer/dashboard',
@@ -56,6 +58,7 @@ export const ENDPOINTS = {
     LIKE: (productId) => `/api/social/like/${productId}`,
     UNLIKE: (productId) => `/api/social/like/${productId}`,
     CHECK_LIKE: (productId) => `/api/social/like/${productId}/check`,
+    MY_LIKES: '/api/social/like/my-likes',
     
     SAVE: (productId) => `/api/social/save/${productId}`,
     UNSAVE: (productId) => `/api/social/save/${productId}`,

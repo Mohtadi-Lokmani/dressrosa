@@ -28,6 +28,14 @@ export const socialService = {
     return response.data;
   },
 
+  /**
+   * Get my liked products
+   */
+  getMyLikes: async (params = {}) => {
+    const response = await api.get(ENDPOINTS.SOCIAL.MY_LIKES, { params });
+    return response.data;
+  },
+
   // ========== SAVES (Wishlist) ==========
   
   /**

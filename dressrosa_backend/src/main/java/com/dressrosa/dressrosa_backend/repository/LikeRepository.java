@@ -7,8 +7,18 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import com.dressrosa.dressrosa_backend.model.Product;
+
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
+    
+    // Find all liked products by user
+    @Query("SELECT l.product FROM Like l WHERE l.user.userId = :userId ORDER BY l.likedAt DESC")
+    Page<Product> findLikedProductsByUserId(@Param("userId") Long userId, Pageable pageable);
     
     // Find all likes by user
     List<Like> findByUserUserId(Long userId);

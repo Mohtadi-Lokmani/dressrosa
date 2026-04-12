@@ -80,17 +80,17 @@ const CartDropdown = ({ onClose }) => {
         ) : (
           <div className="divide-y divide-gray-200">
             {items.map((item) => (
-              <div key={item.cartItemId} className="p-4 hover:bg-gray-50 transition-colors">
+              <div key={item.cartId} className="p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start space-x-3">
                   {/* Product Image */}
                   <Link
-                    to={`/products/${item.product?.productId}`}
+                    to={`/products/${item.productId}`}
                     onClick={onClose}
                     className="flex-shrink-0"
                   >
                     <img
-                      src={item.product?.media?.[0]?.url || 'https://via.placeholder.com/80'}
-                      alt={item.product?.title}
+                      src={item.productImage || 'https://via.placeholder.com/80'}
+                      alt={item.productTitle}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
                   </Link>
@@ -98,32 +98,32 @@ const CartDropdown = ({ onClose }) => {
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <Link
-                      to={`/products/${item.product?.productId}`}
+                      to={`/products/${item.productId}`}
                       onClick={onClose}
                       className="block"
                     >
                       <h4 className="font-medium text-gray-900 line-clamp-2 hover:text-burgundy transition-colors">
-                        {item.product?.title}
+                        {item.productTitle}
                       </h4>
                     </Link>
                     
                     {/* Variant Info */}
-                    {item.variant && (
+                    {(item.size || item.color) && (
                       <p className="text-sm text-gray-500 mt-1">
-                        {item.variant.size && `Size: ${item.variant.size}`}
-                        {item.variant.size && item.variant.color && ' • '}
-                        {item.variant.color && `Color: ${item.variant.color}`}
+                        {item.size && `Size: ${item.size}`}
+                        {item.size && item.color && ' • '}
+                        {item.color && `Color: ${item.color}`}
                       </p>
                     )}
 
                     <p className="text-sm font-semibold text-burgundy mt-1">
-                      {formatPrice(item.price)}
+                      {formatPrice(item.productPrice)}
                     </p>
 
                     {/* Quantity Controls */}
                     <div className="flex items-center space-x-2 mt-2">
                       <button
-                        onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity - 1)}
+                        onClick={() => handleUpdateQuantity(item.cartId, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                         className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:border-burgundy disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
@@ -133,8 +133,7 @@ const CartDropdown = ({ onClose }) => {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => handleUpdateQuantity(item.cartItemId, item.quantity + 1)}
-                        disabled={item.quantity >= (item.variant?.quantity || 999)}
+                        onClick={() => handleUpdateQuantity(item.cartId, item.quantity + 1)}
                         className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:border-burgundy disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <Plus className="w-3 h-3" />
@@ -144,7 +143,7 @@ const CartDropdown = ({ onClose }) => {
 
                   {/* Remove Button */}
                   <button
-                    onClick={() => handleRemove(item.cartItemId)}
+                    onClick={() => handleRemove(item.cartId)}
                     className="p-2 hover:bg-red-50 rounded-full transition-colors group"
                   >
                     <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />

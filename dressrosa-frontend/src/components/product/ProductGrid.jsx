@@ -57,7 +57,7 @@ const ProductGrid = ({ products, onLike }) => {
             </Link>
 
             {/* Seller */}
-            <p className="text-sm text-gray-500 mb-2">{product.seller?.userName}</p>
+            <p className="text-sm text-gray-500 mb-2">{product.sellerName || 'Unknown User'}</p>
 
             {/* Price & Rating */}
             <div className="flex items-center justify-between">

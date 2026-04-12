@@ -3,8 +3,18 @@ package com.dressrosa.dressrosa_backend.service;
 import com.dressrosa.dressrosa_backend.dto.user.*;
 import com.dressrosa.dressrosa_backend.model.User;
 import com.dressrosa.dressrosa_backend.repository.*;
+import com.dressrosa.dressrosa_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -21,8 +31,13 @@ public class UserService {
     @Autowired
     private OrderRepository orderRepository;
     
-    // @Autowired
-    // private ReviewRepository reviewRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    private static final String UPLOAD_DIR = "uploads/photos/";
     
     /**
      * GET USER BY ID
@@ -77,6 +92,13 @@ public class UserService {
         if (request.getUserName() != null) {
             user.setUserName(request.getUserName());
         }
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            // Check email uniqueness
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email already in use");
+            }
+            user.setEmail(request.getEmail());
+        }
         if (request.getTelephone() != null) {
             user.setTelephone(request.getTelephone());
         }
@@ -92,6 +114,62 @@ public class UserService {
         
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
+    }
+    
+    /**
+     * Generate new JWT token for user (used after email change)
+     */
+    public String generateNewToken(String email) {
+        return jwtUtil.generateToken(email);
+    }
+    
+    /**
+     * CHANGE PASSWORD
+     */
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        
+        // Encode and save new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+    
+    /**
+     * SAVE PROFILE PHOTO
+     */
+    public String saveProfilePhoto(Long userId, MultipartFile file) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Create upload directory if not exists
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // Generate unique filename
+        String originalFilename = file.getOriginalFilename();
+        String extension = originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                : ".jpg";
+        String filename = UUID.randomUUID().toString() + extension;
+        
+        // Save file
+        Path filePath = uploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        
+        // Update user profile photo URL
+        String photoUrl = "/uploads/photos/" + filename;
+        user.setProfilePhoto(photoUrl);
+        userRepository.save(user);
+        
+        return photoUrl;
     }
     
     /**

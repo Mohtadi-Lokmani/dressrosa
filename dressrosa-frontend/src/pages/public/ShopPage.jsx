@@ -12,33 +12,47 @@ import Button from '../../components/common/Button';
 import { ShoppingBag, SlidersHorizontal } from 'lucide-react';
 import { SORT_OPTIONS } from '../../utils/constants';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialCat = searchParams.get('cat') ? Number(searchParams.get('cat')) : null;
+  const initialPage = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
+  
+  const initialFilters = {
+    sizes: searchParams.get('size') ? searchParams.get('size').split(',') : [],
+    colors: searchParams.get('color') ? searchParams.get('color').split(',') : [],
+    minPrice: searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : null,
+    maxPrice: searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : null,
+    minRating: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : null,
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState(initialCat);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
+  const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState('createdAt,desc');
+  const [totalPages, setTotalPages] = useState(0);
 
-  // Separate filters state and applied filters
-  const [filters, setFilters] = useState({
-    sizes: [],
-    colors: [],
-    minPrice: null,
-    maxPrice: null,
-    minRating: null,
-  });
-
-  const [appliedFilters, setAppliedFilters] = useState({
-    sizes: [],
-    colors: [],
-    minPrice: null,
-    maxPrice: null,
-    minRating: null,
-  });
+  // Sync state when URL params change (e.g. user uses browser back/forward)
+  useEffect(() => {
+    setSelectedCategory(searchParams.get('cat') ? Number(searchParams.get('cat')) : null);
+    setCurrentPage(searchParams.get('page') ? Number(searchParams.get('page')) : 0);
+    const updatedFilters = {
+      sizes: searchParams.get('size') ? searchParams.get('size').split(',') : [],
+      colors: searchParams.get('color') ? searchParams.get('color').split(',') : [],
+      minPrice: searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : null,
+      maxPrice: searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : null,
+      minRating: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : null,
+    };
+    setFilters(updatedFilters);
+    setAppliedFilters(updatedFilters);
+  }, [searchParams]);
 
   // Fetch categories on mount
   useEffect(() => {
@@ -126,9 +140,22 @@ const ShopPage = () => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
+  const updateUrlParams = (cat, page, filts) => {
+    const params = new URLSearchParams();
+    if (cat) params.set('cat', cat);
+    if (page > 0) params.set('page', page);
+    if (filts.minPrice) params.set('priceMin', filts.minPrice);
+    if (filts.maxPrice) params.set('priceMax', filts.maxPrice);
+    if (filts.sizes && filts.sizes.length > 0) params.set('size', filts.sizes.join(','));
+    if (filts.colors && filts.colors.length > 0) params.set('color', filts.colors.join(','));
+    if (filts.minRating) params.set('ratingMin', filts.minRating);
+    setSearchParams(params);
+  };
+
   const handleApplyFilters = () => {
     setAppliedFilters(filters);
-    setCurrentPage(0); // Reset to first page when filters change
+    setCurrentPage(0);
+    updateUrlParams(selectedCategory, 0, filters);
     toast.success('Filters applied!');
   };
 
@@ -143,6 +170,7 @@ const ShopPage = () => {
     setFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
     setCurrentPage(0);
+    updateUrlParams(selectedCategory, 0, emptyFilters);
     toast.success('Filters cleared!');
   };
 
@@ -156,8 +184,16 @@ const ShopPage = () => {
   };
 
   const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+    const newCat = categoryId === selectedCategory ? null : categoryId;
+    setSelectedCategory(newCat);
     setCurrentPage(0);
+    updateUrlParams(newCat, 0, appliedFilters);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    updateUrlParams(selectedCategory, newPage, appliedFilters);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Check if filters have changed
@@ -291,7 +327,7 @@ const ShopPage = () => {
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
-                      onPageChange={setCurrentPage}
+                      onPageChange={handlePageChange}
                     />
                   </div>
                 )}

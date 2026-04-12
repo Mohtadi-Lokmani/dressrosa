@@ -58,13 +58,20 @@ const CheckoutPage = () => {
         shippingAddress: `${shippingAddress.street}, ${shippingAddress.city}, ${shippingAddress.state}, ${shippingAddress.zipCode}, ${shippingAddress.country}`,
       };
       
-      const order = await orderService.placeOrder(orderData);
+      const response = await orderService.placeOrder(orderData);
       
       // Clear cart
       await clearCart();
       
       toast.success('Order placed successfully!');
-      navigate(`/order-confirmation/${order.orderId}`);
+      
+      if (Array.isArray(response) && response.length > 0) {
+        navigate(`/order-confirmation/${response[0].orderId}`);
+      } else if (response && response.orderId) {
+        navigate(`/order-confirmation/${response.orderId}`);
+      } else {
+        navigate('/orders');
+      }
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error('Failed to place order');
@@ -201,21 +208,21 @@ const CheckoutPage = () => {
               {/* Items */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.cartItemId} className="flex items-start space-x-3">
+                  <div key={item.cartId} className="flex items-start space-x-3">
                     <img
-                      src={item.product?.media?.[0]?.url || 'https://via.placeholder.com/60'}
-                      alt={item.product?.title}
+                      src={item.productImage || 'https://via.placeholder.com/60'}
+                      alt={item.productTitle}
                       className="w-16 h-16 object-cover rounded-lg"
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
-                        {item.product?.title}
+                        {item.productTitle}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
                         Qty: {item.quantity}
                       </p>
                       <p className="text-sm font-semibold text-burgundy mt-1">
-                        {formatPrice(item.price * item.quantity)}
+                        {formatPrice(Number(item.itemTotal || 0))}
                       </p>
                     </div>
                   </div>

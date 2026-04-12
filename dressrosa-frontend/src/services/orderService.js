@@ -5,8 +5,8 @@ export const orderService = {
   /**
    * Place new order
    */
-  placeOrder: async (shippingAddress) => {
-    const response = await api.post(ENDPOINTS.ORDERS.PLACE, { shippingAddress });
+  placeOrder: async (orderData) => {
+    const response = await api.post(ENDPOINTS.ORDERS.PLACE, orderData);
     return response.data;
   },
 

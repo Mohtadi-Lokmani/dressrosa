@@ -25,7 +25,7 @@ import EditProfilePage from './pages/profile/EditProfilePage';
 import WishlistPage from './pages/profile/WishlistPage';
 import FollowPage from './pages/profile/FollowPage';
 import SettingsPage from './pages/profile/SettingsPage';
-
+import SellerProfilePage from './pages/public/SellerProfilePage';
 import SellerDashboardPage from './pages/seller/SellerDashboardPage';
 import AddProductPage from './pages/seller/AddProductPage';
 import EditProductPage from './pages/seller/EditProductPage';
@@ -98,7 +98,7 @@ function App() {
           <Route path="/products/:id" element={<ProductDetailPage />} />
           
           {/* Public Profiles */}
-          <Route path="/seller/:id" element={<ComingSoon title="Seller Profile" />} />
+          <Route path="/seller/:id" element={<SellerProfilePage />} />
           
           {/* Buyer Routes */}
           {/* Checkout & Orders */}
