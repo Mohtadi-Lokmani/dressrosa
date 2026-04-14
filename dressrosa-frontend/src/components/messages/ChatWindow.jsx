@@ -88,10 +88,10 @@ const ChatWindow = ({ otherUser, messages, loading, messagesEndRef, onBack }) =>
 
                 {/* Messages for this date */}
                 {msgs.map((message, index) => {
-                  const isOwn = message.sender?.userId === user?.userId;
+                  const isOwn = message.senderId === user?.userId;
                   const showAvatar = !isOwn && (
                     index === msgs.length - 1 ||
-                    msgs[index + 1]?.sender?.userId !== message.sender?.userId
+                    msgs[index + 1]?.senderId !== message.senderId
                   );
 
                   return (
@@ -106,8 +106,8 @@ const ChatWindow = ({ otherUser, messages, loading, messagesEndRef, onBack }) =>
                         <div className="flex-shrink-0 w-8">
                           {showAvatar ? (
                             <Avatar
-                              src={message.sender?.profileImage}
-                              name={message.sender?.userName}
+                              src={message.senderPhoto}
+                              name={message.senderName}
                               size="sm"
                             />
                           ) : (

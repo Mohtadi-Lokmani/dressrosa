@@ -19,7 +19,16 @@ const MessagesDropdown = ({ onClose }) => {
   const fetchRecentConversations = async () => {
     try {
       const data = await messageService.getConversations();
-      setConversations(data?.slice(0, 5) || []); // Show only 5 recent
+      // Normalize data to match frontend expectations (nested otherUser object)
+      const normalizedData = (data || []).map(conv => ({
+        ...conv,
+        otherUser: {
+          userId: conv.otherUserId,
+          userName: conv.otherUserName,
+          profileImage: conv.otherUserPhoto
+        }
+      }));
+      setConversations(normalizedData.slice(0, 5) || []); // Show only 5 recent
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {

@@ -253,7 +253,7 @@ const ProfilePage = () => {
             </button>
 
             <button
-              onClick={() => navigate('/orders')}
+              onClick={() => navigate(user.role === 'SELLER' ? '/seller/sales' : '/orders')}
               className="bg-white rounded-xl p-6 hover:shadow-md transition-all text-left"
             >
               <div className="flex items-center space-x-4">
@@ -261,8 +261,12 @@ const ProfilePage = () => {
                   <ShoppingBag className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">My Orders</h3>
-                  <p className="text-sm text-gray-600">Track purchases</p>
+                  <h3 className="font-semibold text-gray-900">
+                    {user.role === 'SELLER' ? 'My Sales' : 'My Orders'}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {user.role === 'SELLER' ? 'Manage orders' : 'Track purchases'}
+                  </p>
                 </div>
               </div>
             </button>

@@ -251,37 +251,9 @@ const ShopPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          {showFilters && (
-            <div className="lg:col-span-1">
-              <ProductFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={handleClearFilters}
-              />
-              
-              {/* Apply Filters Button */}
-              <div className="mt-4">
-                <Button
-                  variant="primary"
-                  fullWidth
-                  onClick={handleApplyFilters}
-                  disabled={!hasUnappliedFilters}
-                >
-                  Apply Filters
-                </Button>
-                {hasUnappliedFilters && (
-                  <p className="text-sm text-burgundy text-center mt-2">
-                    Click to apply changes
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Products Grid */}
-          <div className={showFilters ? 'lg:col-span-3' : 'lg:col-span-4'}>
+          <div className="lg:col-span-3">
             {/* Sort & Results Count */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600 text-sm">
@@ -333,6 +305,44 @@ const ShopPage = () => {
                 )}
               </>
             )}
+          </div>
+
+          {/* Filters Sidebar - Always visible on desktop, toggleable on mobile */}
+          <div className={`${showFilters ? 'block' : 'hidden'} lg:block lg:col-span-1`}>
+            <div className="sticky top-24 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+              <div className="p-6">
+                <ProductFilters
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onClearFilters={handleClearFilters}
+                />
+              </div>
+              
+              {/* Apply Filters Button Block */}
+              <div className="p-6 pt-0 border-t border-gray-100 bg-gray-50/50">
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleApplyFilters}
+                  disabled={!hasUnappliedFilters}
+                >
+                  Apply Filters
+                </Button>
+                {hasUnappliedFilters && (
+                  <p className="text-xs text-burgundy text-center mt-2 font-medium animate-pulse">
+                    Click to update results
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  fullWidth
+                  className="mt-2"
+                  onClick={handleClearFilters}
+                >
+                  Clear All
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </Container>

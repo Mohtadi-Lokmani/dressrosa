@@ -40,6 +40,9 @@ public class ProductService {
     @Autowired
     private ReviewRepository reviewRepository;
     
+    @Autowired
+    private FollowRepository followRepository;
+    
     /**
      * CREATE NEW PRODUCT
      * 
@@ -187,6 +190,35 @@ public class ProductService {
      */
     public Page<ProductListResponse> getSellerProducts(Long sellerId, Pageable pageable) {
         Page<Product> products = productRepository.findBySellerUserId(sellerId, pageable);
+        return products.map(this::convertToListResponse);
+    }
+    
+    /**
+     * GET FOLLOWING FEED
+     * 
+     * What it does:
+     * - Find all labels/sellers the user follows
+     * - Get products only from those sellers
+     * - Returns empty page if following no one
+     */
+    public Page<ProductListResponse> getFollowingProducts(Long followerId, Pageable pageable) {
+        // Find which users this person is following
+        List<Follow> follows = followRepository.findByFollowerUserId(followerId);
+        
+        if (follows.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        
+        // Extract seller IDs
+        List<Long> followedSellerIds = follows.stream()
+            .map(f -> f.getFollowing().getUserId())
+            .collect(Collectors.toList());
+            
+        // Fetch products from these sellers
+        Page<Product> products = productRepository.findBySellerUserIdInAndStatus(
+            followedSellerIds, ProductStatus.IN_STOCK, pageable
+        );
+        
         return products.map(this::convertToListResponse);
     }
     
@@ -344,6 +376,12 @@ public class ProductService {
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
         response.setSellerVerified(product.getSeller().getVerificationBadge());
+        
+        // Variants (for filtering in Shop page)
+        List<ProductVariant> variants = productVariantRepository.findByProductProductId(product.getProductId());
+        response.setVariants(variants.stream()
+            .map(this::convertVariantToResponse)
+            .collect(Collectors.toList()));
         
         // Quick stats
         response.setLikesCount(likeRepository.countByProductProductId(product.getProductId()));

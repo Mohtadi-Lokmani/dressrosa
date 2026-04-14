@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { messageService } from '../../services/messageService';
+import { userService } from '../../services/userService';
 import { useMessages } from '../../hooks/useMessages';
 import Container from '../../components/layout/Container';
 import ConversationList from '../../components/messages/ConversationList';
@@ -41,13 +42,22 @@ const MessagesPage = () => {
     if (userId) {
       handleSelectConversation(parseInt(userId));
     }
-  }, [searchParams]);
+  }, [searchParams, conversations]); // Added conversations to dependencies
 
   const fetchConversations = async () => {
     try {
       setLoadingConversations(true);
       const data = await messageService.getConversations();
-      setConversations(data || []);
+      // Normalize data to match frontend expectations (nested otherUser object)
+      const normalizedData = (data || []).map(conv => ({
+        ...conv,
+        otherUser: {
+          userId: conv.otherUserId,
+          userName: conv.otherUserName,
+          profileImage: conv.otherUserPhoto
+        }
+      }));
+      setConversations(normalizedData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
       toast.error('Failed to load conversations');
@@ -56,7 +66,7 @@ const MessagesPage = () => {
     }
   };
 
-  const handleSelectConversation = (userId) => {
+  const handleSelectConversation = async (userId) => {
     setSelectedUserId(userId);
     
     // Find user info from conversations
@@ -66,6 +76,21 @@ const MessagesPage = () => {
     
     if (conversation) {
       setSelectedUser(conversation.otherUser);
+    } else {
+      // If conversation is new, fetch user profile
+      try {
+        const userData = await userService.getUserById(userId);
+        // Normalize user data to match ChatWindow expectations
+        setSelectedUser({
+          ...userData,
+          userId: userData.userId,
+          userName: userData.userName,
+          profileImage: userData.profilePhoto // Map profilePhoto to profileImage
+        });
+      } catch (error) {
+        console.error('Error fetching user for new conversation:', error);
+        toast.error('Failed to load user profile');
+      }
     }
 
     // Update URL

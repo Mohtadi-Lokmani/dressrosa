@@ -67,6 +67,22 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
     
+    @GetMapping("/following")
+    public ResponseEntity<Page<ProductListResponse>> getFollowingProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<ProductListResponse> products = productService.getFollowingProducts(
+            currentUser.getUserId(), pageable
+        );
+        
+        return ResponseEntity.ok(products);
+    }
+    
    
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {

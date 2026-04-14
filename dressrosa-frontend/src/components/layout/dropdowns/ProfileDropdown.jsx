@@ -51,7 +51,7 @@ const ProfileDropdown = ({ onClose }) => {
         </Link>
 
         <Link
-          to="/orders"
+          to={isSeller ? '/seller/sales' : '/orders'}
           onClick={onClose}
           className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
         >

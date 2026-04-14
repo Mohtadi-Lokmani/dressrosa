@@ -51,19 +51,24 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters }) => {
     filters.minRating;
 
   return (
-    <div className="bg-white rounded-xl p-6 sticky top-20">
+    <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-        {hasActiveFilters && (
-          <button
-            onClick={onClearFilters}
-            className="text-sm text-burgundy hover:text-burgundy-dark flex items-center space-x-1"
-          >
-            <X className="w-4 h-4" />
-            <span>Clear All</span>
-          </button>
-        )}
+        <div className="flex items-center space-x-2">
+          {hasActiveFilters && (
+            <button
+              onClick={onClearFilters}
+              className="text-sm text-burgundy hover:text-burgundy-dark flex items-center space-x-1"
+            >
+              <X className="w-4 h-4" />
+              <span>Clear</span>
+            </button>
+          )}
+          {/* Mobile close button: passed as a prop if we want to handle it externally, 
+              but for now we can just use the toggle logic from props if we add it. 
+              Let's just keep it simple and focus on the main layout fix first. */}
+        </div>
       </div>
 
       <div className="space-y-6">

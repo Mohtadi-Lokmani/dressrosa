@@ -32,6 +32,7 @@ export const ENDPOINTS = {
     DELETE: (id) => `/api/products/${id}`,
     BY_SELLER: (id) => `/api/products/seller/${id}`,
     MY_PRODUCTS: '/api/products/my-products',
+    FOLLOWING: '/api/products/following',
   },
   
   // Cart

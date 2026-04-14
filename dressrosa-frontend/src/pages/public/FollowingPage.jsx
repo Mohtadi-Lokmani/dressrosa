@@ -14,14 +14,9 @@ const FollowingPage = () => {
 
   // Fetch products from followed sellers
   const fetchFollowingProducts = async ({ page, size }) => {
-    // This will need a backend endpoint that filters by followed sellers
-    // For now, using regular products endpoint
-    // TODO: Create backend endpoint: GET /api/products/following
-    return await productService.getAll({
+    return await productService.getFollowingProducts({
       page,
       size,
-      status: 'IN_STOCK',
-      sort: 'createdAt,desc',
     });
   };
 

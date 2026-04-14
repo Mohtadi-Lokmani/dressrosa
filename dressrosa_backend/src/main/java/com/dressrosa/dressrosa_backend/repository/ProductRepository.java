@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -23,6 +24,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Find products by seller ID
     List<Product> findBySellerUserId(Long sellerId);
     Page<Product> findBySellerUserId(Long sellerId, Pageable pageable);
+    
+    // Find products from a list of sellers
+    Page<Product> findBySellerUserIdInAndStatus(Collection<Long> sellerIds, ProductStatus status, Pageable pageable);
     
     // Find products by status
     List<Product> findByStatus(ProductStatus status);

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ProductListResponse {
@@ -15,6 +16,9 @@ public class ProductListResponse {
     private Integer viewsCount;
     private Boolean isBoosted;
     private LocalDateTime createdAt;
+    
+    // Variantes pour le filtrage
+    private List<ProductVariantResponse> variants;
     
 
     private String imageUrl;

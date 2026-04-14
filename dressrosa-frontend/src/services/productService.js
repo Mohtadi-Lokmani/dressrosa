@@ -76,6 +76,14 @@ export const productService = {
     const response = await api.get(ENDPOINTS.PRODUCTS.ALL, { params });
     return response.data;
   },
+
+  /**
+   * Get products from followed sellers
+   */
+  getFollowingProducts: async (params = {}) => {
+    const response = await api.get(ENDPOINTS.PRODUCTS.FOLLOWING, { params });
+    return response.data;
+  },
 };
 
 export default productService;
