@@ -4,6 +4,7 @@ import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Share2, Fla
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import { formatPrice } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 import { socialService } from '../../services/socialService';
 import toast from 'react-hot-toast';
 
@@ -171,7 +172,7 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
         <div className="aspect-square bg-gray-100 overflow-hidden">
           {images.length > 0 ? (
             <img
-              src={images[currentImageIndex]?.url || 'https://via.placeholder.com/400'}
+              src={getImageUrl(images[currentImageIndex]?.url) || 'https://via.placeholder.com/400'}
               alt={product.title}
               className="w-full h-full object-cover"
             />
@@ -226,61 +227,59 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
       </Link>
 
       {/* Product Info */}
-      <div className="p-4">
-        {/* Title & Price */}
-        <Link to={`/products/${product.productId}`} className="block mb-2">
-          <h3 className="font-semibold text-gray-900 line-clamp-2 mb-1">
+      <div className="p-5">
+        <Link to={`/products/${product.productId}`} className="block group">
+          <h3 className="font-bold text-gray-900 text-lg group-hover:text-burgundy transition-colors line-clamp-1">
             {product.title}
           </h3>
-          <p className="text-lg font-bold text-burgundy">
-            {formatPrice(product.price)}
-          </p>
+          {product.description && (
+            <p className="text-sm text-gray-500 line-clamp-2 mt-1 leading-relaxed">
+              {product.description}
+            </p>
+          )}
         </Link>
 
-        {/* Rating */}
-        {reviewCount > 0 && (
-          <div className="flex items-center space-x-1 mb-3">
-            {[...Array(5)].map((_, i) => (
-              <span
-                key={i}
-                className={`text-sm ${
-                  i < Math.floor(averageRating)
-                    ? 'text-yellow-400'
-                    : 'text-gray-300'
-                }`}
-              >
-                ★
-              </span>
-            ))}
-            <span className="text-sm text-gray-600 ml-1">
-              ({reviewCount})
-            </span>
+        {/* Footer Area: Price, Rating & Actions */}
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-50">
+          <div className="flex flex-col">
+            <p className="text-2xl font-black text-burgundy tracking-tight">
+              {formatPrice(product.price)}
+            </p>
+            {reviewCount > 0 ? (
+              <div className="flex items-center space-x-1 mt-0.5">
+                <span className="text-yellow-400 text-xs">★</span>
+                <span className="text-xs font-bold text-gray-700">{averageRating.toFixed(1)}</span>
+                <span className="text-xs text-gray-400">({reviewCount})</span>
+              </div>
+            ) : (
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">New Arrival</p>
+            )}
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
-          <Link
-            to={`/products/${product.productId}`}
-            className="text-sm font-medium text-burgundy hover:text-burgundy-dark transition-colors"
-          >
-            View More
-          </Link>
+          <div className="flex items-center space-x-2">
+            {/* View More Link (Humanized) */}
+            <Link
+              to={`/products/${product.productId}`}
+              className="px-4 py-2 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all"
+            >
+              Details
+            </Link>
 
-          {/* Like Button */}
-          <button
-            onClick={handleLike}
-            disabled={likingInProgress}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors group disabled:opacity-50"
-          >
-            <Heart
-              className={`w-5 h-5 transition-colors ${
+            {/* Like Button */}
+            <button
+              onClick={handleLike}
+              disabled={likingInProgress}
+              className={`p-2.5 rounded-xl transition-all border ${
                 isLiked
-                  ? 'fill-red-500 text-red-500'
-                  : 'text-gray-600 group-hover:text-red-500'
-              }`}
-            />
-          </button>
+                  ? 'bg-red-50 border-red-100 text-red-500'
+                  : 'bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50'
+              } disabled:opacity-50`}
+            >
+              <Heart
+                className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`}
+              />
+            </button>
+          </div>
         </div>
       </div>
     </div>

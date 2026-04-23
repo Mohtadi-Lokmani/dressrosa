@@ -135,3 +135,16 @@ export const sortBy = (array, key, order = 'asc') => {
     return a[key] < b[key] ? 1 : -1;
   });
 };
+
+import { API_CONFIG } from '../config/api.config';
+
+/**
+ * Get full image URL
+ */
+export const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `${API_CONFIG.BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};

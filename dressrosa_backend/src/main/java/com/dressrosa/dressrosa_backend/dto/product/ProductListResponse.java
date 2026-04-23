@@ -22,6 +22,7 @@ public class ProductListResponse {
     
 
     private String imageUrl;
+    private List<ProductMediaDTO> media;
     private Long sellerId;
     private String sellerName;
     private Boolean sellerVerified;

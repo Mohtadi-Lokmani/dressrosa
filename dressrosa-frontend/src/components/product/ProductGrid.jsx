@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 import Badge from '../common/Badge';
 
 const ProductGrid = ({ products, onLike }) => {
@@ -16,7 +17,7 @@ const ProductGrid = ({ products, onLike }) => {
             <div className="aspect-square bg-gray-100 overflow-hidden">
               {product.media?.[0]?.url ? (
                 <img
-                  src={product.media[0].url}
+                  src={getImageUrl(product.media[0].url)}
                   alt={product.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

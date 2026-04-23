@@ -29,22 +29,7 @@ public class CartService {
     @Autowired
     private ProductMediaRepository productMediaRepository;
     
-    /**
-     * ADD ITEM TO CART
-     * 
-     * What it does:
-     * 1. Check if product exists and is available
-     * 2. Check if variant exists and has stock
-     * 3. Check if item already in cart
-     *    - If yes: Update quantity
-     *    - If no: Add new cart item
-     * 4. Validate stock availability
-     * 
-     * @param request - Product, variant, quantity to add
-     * @param userId - Current user
-     * @return Updated cart
-     * @throws RuntimeException if product unavailable or out of stock
-     */
+   
     @Transactional
     public CartResponse addToCart(CartRequest request, Long userId) {
         // Find user
@@ -103,19 +88,7 @@ public class CartService {
         // Return updated cart
         return getCart(userId);
     }
-    
-    /**
-     * GET USER'S CART
-     * 
-     * What it does:
-     * - Fetch all items in user's cart
-     * - Calculate item totals (price × quantity)
-     * - Calculate cart total
-     * - Group items by seller (helpful for checkout)
-     * 
-     * @param userId - Current user
-     * @return CartResponse with all items and totals
-     */
+  
     public CartResponse getCart(Long userId) {
         List<Cart> cartItems = cartRepository.findByUserUserId(userId);
         
@@ -143,20 +116,7 @@ public class CartService {
         return response;
     }
     
-    /**
-     * UPDATE CART ITEM QUANTITY
-     * 
-     * What it does:
-     * - Change quantity of item in cart
-     * - Validate stock availability
-     * - If quantity = 0, remove item
-     * 
-     * @param cartId - Cart item to update
-     * @param newQuantity - New quantity
-     * @param userId - Current user (for authorization)
-     * @return Updated cart
-     * @throws RuntimeException if not enough stock
-     */
+    
     @Transactional
     public CartResponse updateCartItem(Long cartId, Integer newQuantity, Long userId) {
         Cart cart = cartRepository.findById(cartId)
@@ -186,17 +146,7 @@ public class CartService {
         
         return getCart(userId);
     }
-    
-    /**
-     * REMOVE ITEM FROM CART
-     * 
-     * What it does:
-     * - Delete specific item from cart
-     * - Check user owns this cart item
-     * 
-     * @param cartId - Cart item to remove
-     * @param userId - Current user
-     */
+   
     @Transactional
     public void removeFromCart(Long cartId, Long userId) {
         Cart cart = cartRepository.findById(cartId)
@@ -210,28 +160,12 @@ public class CartService {
         cartRepository.delete(cart);
     }
     
-    /**
-     * CLEAR ENTIRE CART
-     * 
-     * What it does:
-     * - Remove all items from user's cart
-     * - Used after successful order placement
-     * 
-     * @param userId - User whose cart to clear
-     */
+    
     @Transactional
     public void clearCart(Long userId) {
         cartRepository.deleteByUserUserId(userId);
     }
-    
-    /**
-     * CONVERT CART ENTITY TO RESPONSE
-     * 
-     * What it does:
-     * - Transform Cart → CartItemResponse
-     * - Include product info, variant info, seller info
-     * - Calculate item total (price × quantity)
-     */
+   
     private CartItemResponse convertToItemResponse(Cart cart) {
         CartItemResponse response = new CartItemResponse();
         

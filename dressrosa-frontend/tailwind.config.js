@@ -27,6 +27,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',

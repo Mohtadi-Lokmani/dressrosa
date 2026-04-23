@@ -6,6 +6,8 @@ import FeedContainer from '../../components/feed/FeedContainer';
 import Container from '../../components/layout/Container';
 import toast from 'react-hot-toast';
 
+import HomeAside from '../../components/feed/HomeAside';
+
 const HomePage = () => {
   const [filters] = useState({
     status: 'IN_STOCK',
@@ -36,23 +38,33 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Container className="py-6">
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Home Feed</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Discover amazing products from our community
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#F0F2F5]">
+      <Container className="py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main Feed Area */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="mb-8">
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Home Feed</h1>
+              <p className="text-gray-500 text-sm mt-1 font-medium">
+                Discover the latest masterpieces from your favorite ateliers
+              </p>
+            </div>
 
-        {/* Feed */}
-        <FeedContainer
-          products={products}
-          loading={loading}
-          hasMore={hasMore}
-          onLike={handleLike}
-        />
+            <FeedContainer
+              products={products}
+              loading={loading}
+              hasMore={hasMore}
+              onLike={handleLike}
+            />
+          </div>
+
+          {/* Right Sidebar - Sticky on scroll */}
+          <div className="hidden lg:block">
+            <div className="sticky top-24">
+              <HomeAside />
+            </div>
+          </div>
+        </div>
       </Container>
     </div>
   );

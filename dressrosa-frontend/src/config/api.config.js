@@ -108,4 +108,9 @@ export const ENDPOINTS = {
     ALL: '/api/categories',
     BY_ID: (id) => `/api/categories/${id}`,
   },
+  
+  // Files
+  FILES: {
+    UPLOAD: '/api/files/upload',
+  },
 };

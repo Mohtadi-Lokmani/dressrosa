@@ -7,6 +7,7 @@ import Container from '../../components/layout/Container';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Loading from '../../components/common/Loading';
+import ImageUpload from '../../components/common/ImageUpload';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 
@@ -24,6 +25,8 @@ const AddProductPage = () => {
   const [variants, setVariants] = useState([
     { size: '', color: '', quantity: '' }
   ]);
+
+  const [imageUrls, setImageUrls] = useState([]);
 
   useEffect(() => {
     fetchCategories();
@@ -82,6 +85,7 @@ const AddProductPage = () => {
         price: parseFloat(formData.price),
         categoryId: parseInt(formData.categoryId),
         status: formData.status,
+        imageUrls: imageUrls,
         variants: variants.map(v => ({
           size: v.size || null,
           color: v.color || null,
@@ -254,12 +258,7 @@ const AddProductPage = () => {
               {/* Images */}
               <div className="space-y-4 border-t border-gray-200 pt-6">
                 <h2 className="text-lg font-semibold text-gray-900">Product Images</h2>
-                
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Image upload coming soon</p>
-                  <p className="text-sm text-gray-500">For now, products will use placeholder images</p>
-                </div>
+                <ImageUpload images={imageUrls} onChange={setImageUrls} />
               </div>
 
               {/* Submit */}

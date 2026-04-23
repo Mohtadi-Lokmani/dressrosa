@@ -7,6 +7,7 @@ import Container from '../../components/layout/Container';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Loading from '../../components/common/Loading';
+import ImageUpload from '../../components/common/ImageUpload';
 import toast from 'react-hot-toast';
 
 const EditProductPage = () => {
@@ -23,6 +24,7 @@ const EditProductPage = () => {
     status: 'IN_STOCK',
   });
   const [variants, setVariants] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
 
   useEffect(() => {
     fetchCategories();
@@ -61,6 +63,8 @@ const EditProductPage = () => {
             }))
           : [{ size: '', color: '', quantity: '' }]
       );
+
+      setImageUrls(product.imageUrls || []);
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Failed to load product');
@@ -112,6 +116,7 @@ const EditProductPage = () => {
         price: parseFloat(formData.price),
         categoryId: parseInt(formData.categoryId),
         status: formData.status,
+        imageUrls: imageUrls,
         variants: variants.map(v => ({
           variantId: v.variantId || null,
           size: v.size || null,
@@ -289,12 +294,7 @@ const EditProductPage = () => {
               {/* Images */}
               <div className="space-y-4 border-t border-gray-200 pt-6">
                 <h2 className="text-lg font-semibold text-gray-900">Product Images</h2>
-                
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Image upload coming soon</p>
-                  <p className="text-sm text-gray-500">Current images will be preserved</p>
-                </div>
+                <ImageUpload images={imageUrls} onChange={setImageUrls} />
               </div>
 
               {/* Submit */}

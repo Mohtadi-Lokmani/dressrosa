@@ -14,6 +14,7 @@ import RatingBreakdown from '../../components/social/RatingBreakdown';
 import ReviewForm from '../../components/social/ReviewForm';
 import ReviewList from '../../components/social/ReviewList';
 import { formatPrice } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const ProductDetailPage = () => {
@@ -212,7 +213,7 @@ const ProductDetailPage = () => {
   }
 
   const images = product.media?.filter(m => m.type === 'IMAGE') || [];
-  const currentImage = images[selectedImage]?.url || 'https://via.placeholder.com/600';
+  const currentImage = getImageUrl(images[selectedImage]?.url) || 'https://via.placeholder.com/600';
 
   // Calculate average rating
   const averageRating = reviews.length > 0
@@ -272,7 +273,7 @@ const ProductDetailPage = () => {
                     }`}
                   >
                     <img
-                      src={image.url}
+                      src={getImageUrl(image.url)}
                       alt={`${product.title} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

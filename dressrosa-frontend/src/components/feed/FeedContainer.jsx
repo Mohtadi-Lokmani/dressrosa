@@ -25,9 +25,9 @@ const FeedContainer = ({ products, loading, hasMore, onLike }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-2xl mx-auto">
       {/* Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-8">
         {products.map((product) => (
           <ProductFeedCard
             key={product.productId}
@@ -40,8 +40,8 @@ const FeedContainer = ({ products, loading, hasMore, onLike }) => {
       {/* Loading More */}
       {loading && products.length > 0 && (
         <div className="py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FeedSkeleton count={2} />
+          <div className="grid grid-cols-1 gap-8">
+            <FeedSkeleton count={1} />
           </div>
         </div>
       )}

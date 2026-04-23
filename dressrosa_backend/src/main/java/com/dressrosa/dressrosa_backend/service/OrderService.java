@@ -40,28 +40,7 @@ public class OrderService {
     @Autowired
     private NotificationService notificationService;
     
-    /**
-     * PLACE ORDER FROM CART
-     * 
-     * What it does:
-     * 1. Get all items from user's cart
-     * 2. Group items by seller (one order per seller)
-     * 3. For each seller:
-     *    a. Create order
-     *    b. Add order details for each item
-     *    c. Deduct stock from variants
-     *    d. Update product status if sold out
-     * 4. Clear user's cart
-     * 5. Send notifications to sellers
-     * 
-     * @param request - Contains shipping address
-     * @param buyerId - User placing order
-     * @return List of created orders (one per seller)
-     * @throws RuntimeException if cart empty or stock issues
-     * 
-     * IMPORTANT: This is a CRITICAL operation - uses @Transactional
-     * If ANY step fails, EVERYTHING is rolled back
-     */
+  
     @Transactional
     public List<OrderResponse> placeOrder(OrderRequest request, Long buyerId) {
         // Find buyer
@@ -167,20 +146,7 @@ public class OrderService {
         return createdOrders;
     }
     
-    /**
-     * GET ORDER BY ID
-     * 
-     * What it does:
-     * - Fetch order with all details
-     * - Include all items in order
-     * - Verify user has permission to view this order
-     *   (must be buyer or seller)
-     * 
-     * @param orderId - Order to fetch
-     * @param userId - Current user
-     * @return OrderResponse with full details
-     * @throws RuntimeException if not authorized
-     */
+  
     public OrderResponse getOrderById(Long orderId, Long userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -194,36 +160,13 @@ public class OrderService {
         return convertToResponse(order);
     }
     
-    /**
-     * GET BUYER'S ORDERS
-     * 
-     * What it does:
-     * - Fetch all orders placed by a buyer
-     * - Sorted by newest first
-     * - Paginated results
-     * 
-     * @param buyerId - Buyer
-     * @param pageable - Page settings
-     * @return Page of orders
-     */
+  
     public Page<OrderListResponse> getBuyerOrders(Long buyerId, Pageable pageable) {
         Page<Order> orders = orderRepository.findByBuyerUserId(buyerId, pageable);
         return orders.map(this::convertToListResponse);
     }
     
-    /**
-     * GET SELLER'S ORDERS
-     * 
-     * What it does:
-     * - Fetch all orders for a seller
-     * - These are orders they need to fulfill
-     * - Can filter by status (PENDING, CONFIRMED, etc.)
-     * 
-     * @param sellerId - Seller
-     * @param status - Filter by status (optional)
-     * @param pageable - Page settings
-     * @return Page of orders
-     */
+  
     public Page<OrderListResponse> getSellerOrders(Long sellerId, OrderStatus status, Pageable pageable) {
         Page<Order> orders;
         
@@ -236,21 +179,7 @@ public class OrderService {
         return orders.map(this::convertToListResponse);
     }
     
-    /**
-     * UPDATE ORDER STATUS
-     * 
-     * What it does:
-     * - Change order status (PENDING → CONFIRMED → SHIPPED → DELIVERED)
-     * - Only seller can update status
-     * - Validate status transitions (can't skip steps)
-     * - Send notification to buyer on status change
-     * 
-     * @param orderId - Order to update
-     * @param newStatus - New status
-     * @param sellerId - Current user (must be seller)
-     * @return Updated order
-     * @throws RuntimeException if invalid transition or not authorized
-     */
+  
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus, Long sellerId) {
         Order order = orderRepository.findById(orderId)
@@ -279,21 +208,7 @@ public class OrderService {
         
         return convertToResponse(updatedOrder);
     }
-    
-    /**
-     * CANCEL ORDER
-     * 
-     * What it does:
-     * - Cancel order (set status to CANCELLED)
-     * - Restore stock to variants
-     * - Can only cancel if status is PENDING or CONFIRMED
-     * - Both buyer and seller can cancel
-     * 
-     * @param orderId - Order to cancel
-     * @param userId - Who is cancelling
-     * @return Updated order
-     * @throws RuntimeException if too late to cancel
-     */
+  
     @Transactional
     public OrderResponse cancelOrder(Long orderId, Long userId) {
         Order order = orderRepository.findById(orderId)
@@ -347,19 +262,7 @@ public class OrderService {
         return convertToResponse(cancelledOrder);
     }
     
-    /**
-     * VALIDATE STATUS TRANSITION
-     * 
-     * What it does:
-     * - Ensure status changes follow logical flow
-     * - Can't skip steps (e.g., PENDING → DELIVERED)
-     * 
-     * Valid transitions:
-     * PENDING → CONFIRMED
-     * CONFIRMED → SHIPPED
-     * SHIPPED → DELIVERED
-     * Any → CANCELLED
-     */
+   
     private void validateStatusTransition(OrderStatus current, OrderStatus newStatus) {
         // Can always cancel
         if (newStatus == OrderStatus.CANCELLED) {
@@ -381,10 +284,7 @@ public class OrderService {
         }
     }
     
-    /**
-     * GET STATUS CHANGE MESSAGE
-     * Helper to generate notification messages
-     */
+    
     private String getStatusChangeMessage(OrderStatus status, String sellerName) {
         return switch (status) {
             case CONFIRMED -> sellerName + " confirmed your order";
@@ -395,9 +295,7 @@ public class OrderService {
         };
     }
     
-    /**
-     * CONVERT ORDER TO FULL RESPONSE
-     */
+   
     private OrderResponse convertToResponse(Order order) {
         OrderResponse response = new OrderResponse();
         
@@ -424,9 +322,7 @@ public class OrderService {
         return response;
     }
     
-    /**
-     * CONVERT ORDER TO LIST RESPONSE (LIGHTER)
-     */
+  
     private OrderListResponse convertToListResponse(Order order) {
         OrderListResponse response = new OrderListResponse();
         
@@ -455,10 +351,7 @@ public class OrderService {
         
         return response;
     }
-    
-    /**
-     * CONVERT ORDER DETAIL TO RESPONSE
-     */
+   
     private OrderDetailResponse convertDetailToResponse(OrderDetail detail) {
         OrderDetailResponse response = new OrderDetailResponse();
         

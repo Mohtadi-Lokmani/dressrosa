@@ -116,56 +116,58 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
-      <Container className="flex-1 flex flex-col py-6 overflow-hidden">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex-1 flex">
-          {/* Conversations List - Desktop: Always visible, Mobile: Hide when chat open */}
-          <div
-            className={`w-full lg:w-80 flex-shrink-0 ${
-              showChat ? 'hidden lg:flex' : 'flex'
-            } flex-col`}
-          >
-            <ConversationList
-              conversations={conversations}
-              selectedUserId={selectedUserId}
-              onSelectConversation={handleSelectConversation}
-              loading={loadingConversations}
-            />
-          </div>
-
-          {/* Chat Area - Desktop: Always visible, Mobile: Show when conversation selected */}
-          <div
-            className={`flex-1 ${
-              !showChat ? 'hidden lg:flex' : 'flex'
-            } flex-col`}
-          >
-            {selectedUserId && selectedUser ? (
-              <>
-                <ChatWindow
-                  otherUser={selectedUser}
-                  messages={messages}
-                  loading={loadingMessages}
-                  messagesEndRef={messagesEndRef}
-                  onBack={handleBackToList}
-                />
-                <MessageInput
-                  onSendMessage={handleSendMessage}
-                  sending={sending}
-                  disabled={false}
-                />
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center bg-gray-50">
-                <EmptyState
-                  icon={MessageCircle}
-                  title="Select a conversation"
-                  description="Choose a conversation from the list to start messaging"
-                />
-              </div>
-            )}
-          </div>
+    <div className="bg-[#FAF9F6] flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
+      <div className="flex-1 flex overflow-hidden">
+        {/* Conversations List - Desktop: Fixed width, Mobile: Full width */}
+        <div
+          className={`w-full lg:w-[380px] lg:min-w-[380px] flex-shrink-0 ${
+            showChat ? 'hidden lg:flex' : 'flex'
+          } flex-col border-r border-gray-100 bg-[#FCFBFA] shadow-sm z-10`}
+        >
+          <ConversationList
+            conversations={conversations}
+            selectedUserId={selectedUserId}
+            onSelectConversation={handleSelectConversation}
+            loading={loadingConversations}
+          />
         </div>
-      </Container>
+
+        {/* Chat Area - Desktop: Flexible, Mobile: Full width */}
+        <div
+          className={`flex-1 ${
+            !showChat ? 'hidden lg:flex' : 'flex'
+          } flex-col bg-white relative`}
+        >
+          {selectedUserId && selectedUser ? (
+            <>
+              <ChatWindow
+                otherUser={selectedUser}
+                messages={messages}
+                loading={loadingMessages}
+                messagesEndRef={messagesEndRef}
+                onBack={handleBackToList}
+              />
+              <MessageInput
+                onSendMessage={handleSendMessage}
+                sending={sending}
+                disabled={false}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-[#FCFBFA]">
+              <div className="text-center max-w-sm px-6">
+                <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-10 h-10 text-burgundy/20" />
+                </div>
+                <h3 className="text-xl font-serif font-bold text-gray-900 mb-2">Correspondence</h3>
+                <p className="text-sm text-gray-400 leading-relaxed italic">
+                  Select a record from your archives to continue the conversation.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

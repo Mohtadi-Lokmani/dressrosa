@@ -43,22 +43,7 @@ public class ProductService {
     @Autowired
     private FollowRepository followRepository;
     
-    /**
-     * CREATE NEW PRODUCT
-     * 
-     * What it does:
-     * 1. Create product with basic info (title, price, description)
-     * 2. Link to category
-     * 3. Add media files (images/videos)
-     * 4. Add variants (sizes/colors with stock)
-     * 5. Calculate initial stock status
-     * 
-     * @param request - Product data
-     * @param sellerId - Who is creating this product
-     * @return ProductResponse with full details
-     * 
-     * @Transactional - If anything fails, rollback everything
-     */
+   
     @Transactional
     public ProductResponse createProduct(ProductRequest request, Long sellerId) {
         // Find seller
@@ -124,17 +109,7 @@ public class ProductService {
         return convertToResponse(savedProduct);
     }
     
-    /**
-     * GET PRODUCT BY ID
-     * 
-     * What it does:
-     * - Fetch product details
-     * - Increment view counter
-     * - Include media, variants, statistics
-     * 
-     * @param productId - Product to fetch
-     * @return ProductResponse with full details
-     */
+    
     @Transactional
     public ProductResponse getProductById(Long productId) {
         Product product = productRepository.findById(productId)
@@ -147,22 +122,7 @@ public class ProductService {
         return convertToResponse(product);
     }
     
-    /**
-     * GET ALL PRODUCTS (WITH FILTERS)
-     * 
-     * What it does:
-     * - List all products
-     * - Filter by category, price, status, search term
-     * - Paginated results (20 per page)
-     * - Sort by newest, price, views, etc.
-     * 
-     * @param categoryId - Filter by category (optional)
-     * @param minPrice - Minimum price (optional)
-     * @param maxPrice - Maximum price (optional)
-     * @param searchTerm - Search in title (optional)
-     * @param pageable - Page number, size, sort
-     * @return Page of products
-     */
+    
     public Page<ProductListResponse> getAllProducts(
             Long categoryId, 
             java.math.BigDecimal minPrice, 
@@ -177,30 +137,13 @@ public class ProductService {
         return productsPage.map(this::convertToListResponse);
     }
     
-    /**
-     * GET SELLER'S PRODUCTS
-     * 
-     * What it does:
-     * - Fetch all products from a specific seller
-     * - Used in seller profile page
-     * 
-     * @param sellerId - Seller ID
-     * @param pageable - Pagination
-     * @return Page of products
-     */
+    
     public Page<ProductListResponse> getSellerProducts(Long sellerId, Pageable pageable) {
         Page<Product> products = productRepository.findBySellerUserId(sellerId, pageable);
         return products.map(this::convertToListResponse);
     }
     
-    /**
-     * GET FOLLOWING FEED
-     * 
-     * What it does:
-     * - Find all labels/sellers the user follows
-     * - Get products only from those sellers
-     * - Returns empty page if following no one
-     */
+   
     public Page<ProductListResponse> getFollowingProducts(Long followerId, Pageable pageable) {
         // Find which users this person is following
         List<Follow> follows = followRepository.findByFollowerUserId(followerId);
@@ -222,19 +165,7 @@ public class ProductService {
         return products.map(this::convertToListResponse);
     }
     
-    /**
-     * UPDATE PRODUCT
-     * 
-     * What it does:
-     * - Update product details
-     * - Only seller who created it can update
-     * - Update variants and media if provided
-     * 
-     * @param productId - Product to update
-     * @param request - New data
-     * @param sellerId - Who is updating (must be owner)
-     * @return Updated product
-     */
+   
     @Transactional
     public ProductResponse updateProduct(Long productId, ProductRequest request, Long sellerId) {
         Product product = productRepository.findById(productId)
@@ -265,17 +196,7 @@ public class ProductService {
         return convertToResponse(updatedProduct);
     }
     
-    /**
-     * DELETE PRODUCT
-     * 
-     * What it does:
-     * - Remove product from database
-     * - Cascade delete: media, variants, likes, saves all deleted too
-     * - Only seller who created it can delete
-     * 
-     * @param productId - Product to delete
-     * @param sellerId - Who is deleting (must be owner)
-     */
+   
     @Transactional
     public void deleteProduct(Long productId, Long sellerId) {
         Product product = productRepository.findById(productId)
@@ -289,14 +210,7 @@ public class ProductService {
         productRepository.delete(product);
     }
     
-    /**
-     * CONVERT PRODUCT ENTITY TO FULL RESPONSE
-     * 
-     * What it does:
-     * - Transform Product → ProductResponse
-     * - Include all related data (media, variants, stats)
-     * - Calculate likes, saves, ratings
-     */
+   
     private ProductResponse convertToResponse(Product product) {
         ProductResponse response = new ProductResponse();
         
@@ -332,6 +246,11 @@ public class ProductService {
             .map(ProductMedia::getUrl)
             .collect(Collectors.toList()));
         
+        // Set unified media list for frontend
+        response.setMedia(media.stream()
+            .map(m -> new ProductMediaDTO(m.getUrl(), m.getType()))
+            .collect(Collectors.toList()));
+        
         // Variants
         List<ProductVariant> variants = productVariantRepository.findByProductProductId(product.getProductId());
         response.setVariants(variants.stream()
@@ -347,14 +266,7 @@ public class ProductService {
         return response;
     }
     
-    /**
-     * CONVERT PRODUCT TO LIST RESPONSE (LIGHTER VERSION)
-     * 
-     * What it does:
-     * - Simpler version for product lists
-     * - Only essential info (title, price, first image)
-     * - Faster because less data to fetch
-     */
+    
     private ProductListResponse convertToListResponse(Product product) {
         ProductListResponse response = new ProductListResponse();
         
@@ -371,6 +283,11 @@ public class ProductService {
         if (!media.isEmpty()) {
             response.setImageUrl(media.get(0).getUrl());
         }
+        
+        // Set unified media list for frontend
+        response.setMedia(media.stream()
+            .map(m -> new ProductMediaDTO(m.getUrl(), m.getType()))
+            .collect(Collectors.toList()));
         
         // Seller
         response.setSellerId(product.getSeller().getUserId());

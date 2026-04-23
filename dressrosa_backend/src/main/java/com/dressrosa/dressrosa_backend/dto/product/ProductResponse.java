@@ -30,6 +30,7 @@ public class ProductResponse {
     // Media
     private List<String> imageUrls;
     private List<String> videoUrls;
+    private List<ProductMediaDTO> media;
     
     // Variants
     private List<ProductVariantResponse> variants;

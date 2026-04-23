@@ -28,20 +28,7 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
     
-    /**
-     * REGISTER NEW USER
-     * 
-     * What it does:
-     * 1. Check if email already exists
-     * 2. Encrypt password using BCrypt
-     * 3. Create new user in database
-     * 4. Generate JWT token
-     * 5. Return token + user info
-     * 
-     * @param request - Contains username, email, password, role
-     * @return AuthResponse with JWT token
-     * @throws RuntimeException if email already exists
-     */
+    
     public AuthResponse register(RegisterRequest request) {
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -74,20 +61,7 @@ public class AuthService {
             savedUser.getRole()
         );
     }
-    
-    /**
-     * LOGIN USER
-     * 
-     * What it does:
-     * 1. Authenticate using email + password
-     * 2. Spring Security checks credentials
-     * 3. If valid, generate JWT token
-     * 4. Return token + user info
-     * 
-     * @param request - Contains email and password
-     * @return AuthResponse with JWT token
-     * @throws RuntimeException if credentials are invalid
-     */
+   
     public AuthResponse login(LoginRequest request) {
         // Authenticate user
         Authentication authentication = authenticationManager.authenticate(

@@ -1,5 +1,6 @@
 import { User } from 'lucide-react';
 import { getInitials } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 
 const Avatar = ({
   src,
@@ -45,7 +46,7 @@ const Avatar = ({
     <div className={`relative inline-block ${className}`} {...props}>
       {src ? (
         <img
-          src={src}
+          src={getImageUrl(src)}
           alt={alt || name || 'Avatar'}
           className={`
             ${sizes[size]}

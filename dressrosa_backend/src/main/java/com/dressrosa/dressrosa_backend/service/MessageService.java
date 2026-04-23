@@ -30,25 +30,7 @@ public class MessageService {
     @Autowired
     private NotificationService notificationService;
     
-    /**
-     * SEND MESSAGE
-     * 
-     * What it does:
-     * 1. Validate sender and receiver exist
-     * 2. Create message with content
-     * 3. Set isRead = false, seenAt = null
-     * 4. Save to database
-     * 5. Send notification to receiver
-     * 6. Return message details
-     * 
-     * Real-time note: In production, you'd also emit WebSocket event
-     * so receiver gets message instantly without refreshing
-     * 
-     * @param request - Contains receiverId and message content
-     * @param senderId - Current user (from JWT token)
-     * @return MessageResponse with sent message
-     * @throws RuntimeException if users not found
-     */
+   
     @Transactional
     public MessageResponse sendMessage(MessageRequest request, Long senderId) {
         // Can't send message to yourself
@@ -67,8 +49,8 @@ public class MessageService {
         message.setSender(sender);
         message.setReceiver(receiver);
         message.setContent(request.getContent());
-        message.setIsRead(false);  // Not read yet
-        message.setSeenAt(null);   // Not seen yet
+        message.setIsRead(false);  
+        message.setSeenAt(null);   
         
         Message savedMessage = messageRepository.save(message);
         
@@ -87,22 +69,7 @@ public class MessageService {
         return convertToResponse(savedMessage);
     }
     
-    /**
-     * GET CONVERSATION BETWEEN TWO USERS
-     * 
-     * What it does:
-     * - Fetch all messages exchanged between two users
-     * - Sorted chronologically (oldest first for chat display)
-     * - Includes messages in both directions:
-     *   * User A → User B
-     *   * User B → User A
-     * - Paginated (load more messages as user scrolls up)
-     * 
-     * @param otherUserId - The other person in conversation
-     * @param currentUserId - Current user
-     * @param pageable - Pagination settings
-     * @return Page of messages
-     */
+   
     public Page<MessageResponse> getConversation(
             Long otherUserId, 
             Long currentUserId, 
@@ -117,28 +84,10 @@ public class MessageService {
         return messages.map(this::convertToResponse);
     }
     
-    /**
-     * GET ALL CONVERSATIONS FOR USER
-     * 
-     * What it does:
-     * - Get list of all people user has chatted with
-     * - Show last message preview
-     * - Show unread count for each conversation
-     * - Sorted by most recent activity first
-     * - Like WhatsApp/Messenger conversation list
-     * 
-     * Example output:
-     * [
-     *   { user: "Sarah", lastMsg: "Thanks!", time: "2 min ago", unread: 3 },
-     *   { user: "Mike", lastMsg: "Is it available?", time: "1 hour ago", unread: 0 }
-     * ]
-     * 
-     * @param userId - Current user
-     * @return List of conversations with previews
-     */
+    
     public List<ConversationResponse> getConversations(Long userId) {
         // Get all unique users this user has chatted with
-        // This is simplified - in production you'd use a more efficient query
+      
         
         List<Message> sentMessages = messageRepository.findBySenderUserId(userId);
         List<Message> receivedMessages = messageRepository.findByReceiverUserId(userId);
@@ -193,25 +142,7 @@ public class MessageService {
         return conversations;
     }
     
-    /**
-     * MARK MESSAGE AS READ
-     * 
-     * What it does:
-     * - Mark message as read when receiver views it
-     * - Set isRead = true
-     * - Set seenAt = current timestamp
-     * - Used to show "Read" status and read receipts
-     * - Only receiver can mark as read
-     * 
-     * Flow:
-     * 1. Message arrives → isRead = false, seenAt = null
-     * 2. User opens chat → Call this method
-     * 3. isRead = true, seenAt = "2024-02-13 14:30:00"
-     * 4. Sender sees "Read at 14:30" (like WhatsApp blue ticks)
-     * 
-     * @param messageId - Message to mark as read
-     * @param userId - Current user (must be receiver)
-     */
+   
     @Transactional
     public void markAsRead(Long messageId, Long userId) {
         Message message = messageRepository.findById(messageId)
@@ -231,25 +162,10 @@ public class MessageService {
         message.setSeenAt(LocalDateTime.now());
         messageRepository.save(message);
         
-        // TODO: In real app, emit WebSocket event to sender:
+        
         // webSocketService.sendReadReceipt(message.getSender().getUserId(), messageId);
     }
-    
-    /**
-     * MARK ALL MESSAGES FROM USER AS READ
-     * 
-     * What it does:
-     * - Mark entire conversation as read
-     * - Called when user opens a conversation
-     * - Marks all unread messages from that person
-     * 
-     * Example: User has 5 unread messages from Sarah
-     * → User opens chat with Sarah
-     * → All 5 messages marked as read
-     * 
-     * @param fromUserId - User who sent the messages
-     * @param currentUserId - Current user (receiver)
-     */
+   
     @Transactional
     public void markConversationAsRead(Long fromUserId, Long currentUserId) {
         List<Message> unreadMessages = messageRepository.getUnreadMessages(currentUserId)
@@ -266,31 +182,12 @@ public class MessageService {
         }
     }
     
-    /**
-     * GET UNREAD MESSAGE COUNT
-     * 
-     * What it does:
-     * - Count total unread messages for user
-     * - Used to show notification badge (like "5" on app icon)
-     * 
-     * @param userId - Current user
-     * @return Number of unread messages
-     */
+  
     public long getUnreadCount(Long userId) {
         return messageRepository.countByReceiverUserIdAndIsReadFalse(userId);
     }
     
-    /**
-     * GET UNREAD MESSAGES
-     * 
-     * What it does:
-     * - Fetch all unread messages for user
-     * - Sorted by newest first
-     * - Used to show notifications list
-     * 
-     * @param userId - Current user
-     * @return List of unread messages
-     */
+   
     public List<MessageResponse> getUnreadMessages(Long userId) {
         List<Message> messages = messageRepository.getUnreadMessages(userId);
         return messages.stream()
@@ -298,18 +195,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * DELETE MESSAGE
-     * 
-     * What it does:
-     * - Delete a message
-     * - Only sender can delete their own messages
-     * - Note: This is "delete for me" not "delete for everyone"
-     *   (For "delete for everyone" you'd need soft delete flag)
-     * 
-     * @param messageId - Message to delete
-     * @param userId - Current user
-     */
+   
     @Transactional
     public void deleteMessage(Long messageId, Long userId) {
         Message message = messageRepository.findById(messageId)
@@ -322,19 +208,7 @@ public class MessageService {
         
         messageRepository.delete(message);
     }
-    
-    /**
-     * SEARCH MESSAGES
-     * 
-     * What it does:
-     * - Search message content
-     * - Find messages containing specific text
-     * - Used for "Search in conversation" feature
-     * 
-     * @param userId - Current user
-     * @param searchTerm - Text to search for
-     * @return List of matching messages
-     */
+   
     public List<MessageResponse> searchMessages(Long userId, String searchTerm) {
         // Get all messages involving this user
         List<Message> sentMessages = messageRepository.findBySenderUserId(userId);
@@ -352,14 +226,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * CONVERT MESSAGE ENTITY TO RESPONSE
-     * 
-     * What it does:
-     * - Transform Message → MessageResponse
-     * - Include sender and receiver info
-     * - Include timestamps and read status
-     */
+   
     private MessageResponse convertToResponse(Message message) {
         MessageResponse response = new MessageResponse();
         

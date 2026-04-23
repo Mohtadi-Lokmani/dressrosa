@@ -39,17 +39,7 @@ public class UserService {
     
     private static final String UPLOAD_DIR = "uploads/photos/";
     
-    /**
-     * GET USER BY ID
-     * 
-     * What it does:
-     * - Fetch user from database by ID
-     * - Convert User entity to UserDTO (hide password!)
-     * 
-     * @param userId - User ID to fetch
-     * @return UserDTO with user details
-     * @throws RuntimeException if user not found
-     */
+ 
     public UserDTO getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -57,15 +47,7 @@ public class UserService {
         return convertToDTO(user);
     }
     
-    /**
-     * GET CURRENT USER
-     * 
-     * What it does:
-     * - Get currently logged-in user from JWT token
-     * - Return their profile info
-     * 
-     
-     */
+   
     public UserDTO getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -73,17 +55,7 @@ public class UserService {
         return convertToDTO(user);
     }
     
-    /**
-     * UPDATE USER PROFILE
-     * 
-     * What it does:
-     * - Update user's profile information
-     * - Only updates fields that are provided (not null)
-     * 
-     * @param userId - User to update
-     * @param request - New profile data
-     * @return Updated UserDTO
-     */
+   
     public UserDTO updateUser(Long userId, UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -116,16 +88,12 @@ public class UserService {
         return convertToDTO(updatedUser);
     }
     
-    /**
-     * Generate new JWT token for user (used after email change)
-     */
+   
     public String generateNewToken(String email) {
         return jwtUtil.generateToken(email);
     }
     
-    /**
-     * CHANGE PASSWORD
-     */
+    
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -140,9 +108,7 @@ public class UserService {
         userRepository.save(user);
     }
     
-    /**
-     * SAVE PROFILE PHOTO
-     */
+   
     public String saveProfilePhoto(Long userId, MultipartFile file) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -171,18 +137,7 @@ public class UserService {
         
         return photoUrl;
     }
-    
-    /**
-     * GET SELLER PROFILE (PUBLIC VIEW)
-     * 
-     * What it does:
-     * - Get seller's public profile
-     * - Include statistics (products, followers, ratings)
-     * - This is what buyers see when viewing a seller
-     * 
-     * @param sellerId - Seller to view
-     * @return SellerProfileDTO with stats
-     */
+  
     public SellerProfileDTO getSellerProfile(Long sellerId) {
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
@@ -199,43 +154,27 @@ public class UserService {
         dto.setTotalProducts(productRepository.countBySellerUserId(sellerId));
         dto.setFollowersCount(followRepository.countByFollowingUserId(sellerId));
         dto.setFollowingCount(followRepository.countByFollowerUserId(sellerId));
-        
-        // Calculate average rating from all seller's products
-        // This would require a custom query - simplified for now
-        dto.setAverageRating(4.5); // TODO: Calculate from reviews
+        dto.setAverageRating(4.5); 
         
         return dto;
     }
     
-    /**
-     * GET SELLER DASHBOARD
-     * 
-     * What it does:
-     * - Get comprehensive statistics for seller
-     * - Shows products, views, followers, sales, orders
-     * - Only accessible by the seller themselves
-     * 
-     * @param sellerId - Seller requesting dashboard
-     * @return SellerDashboardResponse with all stats
-     */
+  
     public SellerDashboardResponse getSellerDashboard(Long sellerId) {
         SellerDashboardResponse dashboard = new SellerDashboardResponse();
         
         // Product stats
         dashboard.setTotalProducts(productRepository.countBySellerUserId(sellerId));
-        // TODO: Add in-stock and sold-out counts
-        
-        // View stats (simplified - would need tracking)
-        dashboard.setTotalViews(0); // TODO: Implement view tracking
+        dashboard.setTotalViews(0); 
         dashboard.setTodayViews(0);
         dashboard.setWeekViews(0);
         
         // Social stats
         dashboard.setFollowersCount(followRepository.countByFollowingUserId(sellerId));
-        dashboard.setTotalLikes(0L); // TODO: Count likes on seller's products
+        dashboard.setTotalLikes(0L);
         
         // Message stats
-        dashboard.setUnreadMessages(0L); // TODO: Count unread messages
+        dashboard.setUnreadMessages(0L); 
         dashboard.setTodayMessages(0L);
         
         // Sales stats
@@ -246,42 +185,22 @@ public class UserService {
         dashboard.setTotalOrders(orderRepository.countBySellerUserId(sellerId));
         dashboard.setPendingOrders(orderRepository.countBySellerUserIdAndStatus(sellerId, 
             com.dressrosa.dressrosa_backend.model.OrderStatus.PENDING));
-        // TODO: Add other order status counts
+      
         
         return dashboard;
     }
-    
-    /**
-     * GET BUYER DASHBOARD
-     * 
-     * What it does:
-     * - Get statistics for buyer
-     * - Shows orders, saved products, likes, following
-     * 
-     * @param buyerId - Buyer requesting dashboard
-     * @return BuyerDashboardResponse with stats
-     */
+  
     public BuyerDashboardResponse getBuyerDashboard(Long buyerId) {
         BuyerDashboardResponse dashboard = new BuyerDashboardResponse();
         
         // Order stats
         dashboard.setTotalOrders(orderRepository.countByBuyerUserId(buyerId));
-        // TODO: Add order status counts
-        
-        // Social stats
-        // TODO: Implement saved, liked, following counts
+       
         
         return dashboard;
     }
     
-    /**
-     * CONVERT USER ENTITY TO DTO
-     * 
-     * What it does:
-     * - Transform User entity to UserDTO
-     * - Hides password and sensitive data
-     * - Only includes data safe to send to frontend
-     */
+  
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setUserId(user.getUserId());

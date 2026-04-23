@@ -84,6 +84,21 @@ export const productService = {
     const response = await api.get(ENDPOINTS.PRODUCTS.FOLLOWING, { params });
     return response.data;
   },
+
+  /**
+   * Upload product image
+   */
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post(ENDPOINTS.FILES.UPLOAD, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data; // { url: '...' }
+  },
 };
 
 export default productService;
