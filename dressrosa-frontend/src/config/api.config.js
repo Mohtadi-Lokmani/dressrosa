@@ -18,6 +18,7 @@ export const ENDPOINTS = {
     UPDATE: '/api/users/me',
     CHANGE_PASSWORD: '/api/users/me/password',
     UPLOAD_PHOTO: '/api/users/me/photo',
+    UPLOAD_BANNER: '/api/users/me/banner',
     SELLER: (id) => `/api/users/seller/${id}`,
     SELLER_DASHBOARD: '/api/users/seller/dashboard',
     BUYER_DASHBOARD: '/api/users/buyer/dashboard',
@@ -33,6 +34,7 @@ export const ENDPOINTS = {
     BY_SELLER: (id) => `/api/products/seller/${id}`,
     MY_PRODUCTS: '/api/products/my-products',
     FOLLOWING: '/api/products/following',
+    BOOST: (id) => `/api/products/${id}/boost`,
   },
   
   // Cart
@@ -83,6 +85,8 @@ export const ENDPOINTS = {
     SEND: '/api/messages',
     CONVERSATION: (userId) => `/api/messages/conversation/${userId}`,
     CONVERSATIONS: '/api/messages/conversations',
+    CONVERSATIONS_STUDIO: '/api/messages/conversations/studio',
+    CONVERSATIONS_PROFILE: '/api/messages/conversations/profile',
     MARK_READ: (id) => `/api/messages/${id}/read`,
     MARK_CONVERSATION_READ: (userId) => `/api/messages/conversation/${userId}/read`,
     UNREAD_COUNT: '/api/messages/unread/count',
@@ -94,6 +98,9 @@ export const ENDPOINTS = {
   NOTIFICATIONS: {
     ALL: '/api/notifications',
     UNREAD: '/api/notifications/unread',
+    AUDIENCE_ALL: (audience) => `/api/notifications?audience=${audience}`,
+    AUDIENCE_UNREAD: (audience) => `/api/notifications/unread?audience=${audience}`,
+    AUDIENCE_COUNT: (audience) => `/api/notifications/unread/count?audience=${audience}`,
     RECENT: '/api/notifications/recent',
     UNREAD_COUNT: '/api/notifications/unread/count',
     BY_TYPE: (type) => `/api/notifications/type/${type}`,
@@ -112,5 +119,14 @@ export const ENDPOINTS = {
   // Files
   FILES: {
     UPLOAD: '/api/files/upload',
+  },
+
+  // Studio
+  STUDIO: {
+    ANALYTICS: '/api/studio/analytics',
+    HOME_TODO: '/api/users/studio/todo',
+    NOTIFICATIONS: '/api/notifications?audience=SELLER',
+    MESSAGES: '/api/messages/conversations/studio',
+    BOOST: '/api/studio/boost',
   },
 };

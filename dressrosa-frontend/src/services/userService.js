@@ -41,7 +41,19 @@ export const userService = {
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post(ENDPOINTS.USERS.UPLOAD_PHOTO, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  /**
+   * Upload banner
+   */
+  uploadBanner: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(ENDPOINTS.USERS.UPLOAD_BANNER, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
   },
@@ -60,6 +72,16 @@ export const userService = {
   getSellerDashboard: async () => {
     const response = await api.get(ENDPOINTS.USERS.SELLER_DASHBOARD);
     return response.data;
+  },
+
+  getStudioTodo: async () => {
+    try {
+      const response = await api.get(ENDPOINTS.STUDIO.HOME_TODO);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching studio todo:', error);
+      return { items: [] };
+    }
   },
 
   /**

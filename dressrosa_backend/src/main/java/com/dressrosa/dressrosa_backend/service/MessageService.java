@@ -4,6 +4,7 @@ import com.dressrosa.dressrosa_backend.dto.social.ConversationResponse;
 import com.dressrosa.dressrosa_backend.dto.social.MessageRequest;
 import com.dressrosa.dressrosa_backend.dto.social.MessageResponse;
 import com.dressrosa.dressrosa_backend.model.Message;
+import com.dressrosa.dressrosa_backend.model.NotificationAudience;
 import com.dressrosa.dressrosa_backend.model.NotificationType;
 import com.dressrosa.dressrosa_backend.model.User;
 import com.dressrosa.dressrosa_backend.repository.MessageRepository;
@@ -44,24 +45,64 @@ public class MessageService {
         User receiver = userRepository.findById(request.getReceiverId())
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
         
-        // Create message
         Message message = new Message();
         message.setSender(sender);
         message.setReceiver(receiver);
         message.setContent(request.getContent());
         message.setIsRead(false);  
         message.setSeenAt(null);   
+
+        // Set merchant context
+        if (request.getMerchantId() != null) {
+            User merchant = userRepository.findById(request.getMerchantId())
+                    .orElseThrow(() -> new RuntimeException("Merchant not found"));
+            message.setMerchant(merchant);
+        } else if (receiver.getRole() == com.dressrosa.dressrosa_backend.model.Role.SELLER) {
+            // Default to receiver if they are a seller and no context provided
+            message.setMerchant(receiver);
+        }
         
         Message savedMessage = messageRepository.save(message);
         
+        // Notification logic: Determine audience
+        NotificationAudience audience = NotificationAudience.BUYER;
+        if (message.getMerchant() != null && message.getMerchant().getUserId().equals(receiver.getUserId())) {
+            audience = NotificationAudience.SELLER;
+        }
+
         // Send notification to receiver
         notificationService.createNotification(
             receiver.getUserId(),
             NotificationType.MESSAGE,
-            "New Message",
-            "You have a new message from " + sender.getUserName(),
+            audience,
+            "New Message from " + sender.getUserName(),
+            message.getContent().substring(0, Math.min(message.getContent().length(), 50)) + (message.getContent().length() > 50 ? "..." : ""),
             savedMessage.getMessageId()
         );
+
+        // AUTO-REPLY LOGIC: If receiver is a seller and has an auto-reply message set
+        if (receiver.getAutoReplyMessage() != null && !receiver.getAutoReplyMessage().isEmpty()) {
+            // Check if this is a buyer contacting a seller
+            // And ensure we don't auto-reply to an auto-reply (prevent loop)
+            // For simplicity, we only auto-reply if the sender is NOT the receiver (already checked)
+            // and if there are no messages from the seller to this buyer yet in this context
+            
+            boolean threadHasSellerResponse = messageRepository.getConversation(senderId, receiver.getUserId(), Pageable.unpaged())
+                .getContent().stream()
+                .anyMatch(m -> m.getSender().getUserId().equals(receiver.getUserId()));
+
+            if (!threadHasSellerResponse) {
+                Message autoReply = new Message();
+                autoReply.setSender(receiver);
+                autoReply.setReceiver(sender);
+                autoReply.setContent("[Auto-Reply] " + receiver.getAutoReplyMessage());
+                autoReply.setIsRead(false);
+                autoReply.setMerchant(receiver); // Context is the seller
+                messageRepository.save(autoReply);
+                
+                // Note: We don't send a notification for auto-replies to keep it clean
+            }
+        }
         
         // TODO: In real app, emit WebSocket event here:
         // webSocketService.sendToUser(receiver.getUserId(), savedMessage);
@@ -86,59 +127,69 @@ public class MessageService {
     
     
     public List<ConversationResponse> getConversations(Long userId) {
-        // Get all unique users this user has chatted with
-      
-        
-        List<Message> sentMessages = messageRepository.findBySenderUserId(userId);
-        List<Message> receivedMessages = messageRepository.findByReceiverUserId(userId);
-        
-        // Collect unique conversation partners
-        Set<Long> conversationPartners = new HashSet<>();
-        sentMessages.forEach(m -> conversationPartners.add(m.getReceiver().getUserId()));
-        receivedMessages.forEach(m -> conversationPartners.add(m.getSender().getUserId()));
-        
-        // Build conversation preview for each partner
+        List<Message> allMessages = new ArrayList<>();
+        allMessages.addAll(messageRepository.findBySenderUserId(userId));
+        allMessages.addAll(messageRepository.findByReceiverUserId(userId));
+        return buildConversations(userId, allMessages);
+    }
+
+    public List<ConversationResponse> getStudioConversations(Long userId) {
+        List<Message> messages = messageRepository.findStudioMessages(userId);
+        return buildConversations(userId, messages);
+    }
+
+    public List<ConversationResponse> getProfileConversations(Long userId) {
+        List<Message> messages = messageRepository.findProfileMessages(userId);
+        return buildConversations(userId, messages);
+    }
+
+    private List<ConversationResponse> buildConversations(Long userId, List<Message> messages) {
+        // Group messages by (otherUser, merchantId) pair to separate threads by shop
+        Map<String, List<Message>> groupedMessages = messages.stream()
+                .collect(Collectors.groupingBy(m -> {
+                    long otherId = m.getSender().getUserId().equals(userId) 
+                            ? m.getReceiver().getUserId() 
+                            : m.getSender().getUserId();
+                    long mercId = m.getMerchant() != null ? m.getMerchant().getUserId() : 0;
+                    return otherId + "_" + mercId;
+                }));
+
         List<ConversationResponse> conversations = new ArrayList<>();
-        
-        for (Long partnerId : conversationPartners) {
-            User partner = userRepository.findById(partnerId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+        for (Map.Entry<String, List<Message>> entry : groupedMessages.entrySet()) {
+            String[] parts = entry.getKey().split("_");
+            Long otherId = Long.parseLong(parts[0]);
+            Long mercId = Long.parseLong(parts[1]);
+            List<Message> thread = entry.getValue();
             
-            // Get last message with this partner
-            Message lastMessage = messageRepository.getLastMessage(userId, partnerId);
-            
-            // Count unread messages from this partner
-            Long unreadCount = messageRepository.findByReceiverUserId(userId).stream()
-                    .filter(m -> m.getSender().getUserId().equals(partnerId))
-                    .filter(m -> !m.getIsRead())
+            // Sort thread by date desc to get last
+            thread.sort((a, b) -> b.getSentAt().compareTo(a.getSentAt()));
+            Message lastMessage = thread.get(0);
+
+            User otherUser = otherId.equals(lastMessage.getSender().getUserId()) 
+                    ? lastMessage.getSender() 
+                    : lastMessage.getReceiver();
+
+            long unreadCount = thread.stream()
+                    .filter(m -> m.getReceiver().getUserId().equals(userId) && !m.getIsRead())
                     .count();
-            
+
             ConversationResponse conv = new ConversationResponse();
-            conv.setOtherUserId(partnerId);
-            conv.setOtherUserName(partner.getUserName());
-            conv.setOtherUserPhoto(partner.getProfilePhoto());
+            conv.setOtherUserId(otherId);
+            conv.setOtherUserName(otherUser.getUserName());
+            conv.setOtherUserPhoto(otherUser.getProfilePhoto());
+            conv.setMerchantId(mercId > 0 ? mercId : null);
+            conv.setLastMessage(lastMessage.getContent());
+            conv.setLastMessageTime(lastMessage.getSentAt());
             
-            if (lastMessage != null) {
-                conv.setLastMessage(lastMessage.getContent());
-                conv.setLastMessageTime(lastMessage.getSentAt());
-                
-                // Check if last message was from partner and is unread
-                boolean isLastFromPartner = lastMessage.getSender().getUserId().equals(partnerId);
-                conv.setIsRead(isLastFromPartner ? lastMessage.getIsRead() : true);
-            }
-            
+            boolean isLastFromOther = lastMessage.getSender().getUserId().equals(otherId);
+            conv.setIsRead(isLastFromOther ? lastMessage.getIsRead() : true);
             conv.setUnreadCount(unreadCount);
-            
+
             conversations.add(conv);
         }
-        
-        // Sort by most recent first
-        conversations.sort((a, b) -> {
-            if (a.getLastMessageTime() == null) return 1;
-            if (b.getLastMessageTime() == null) return -1;
-            return b.getLastMessageTime().compareTo(a.getLastMessageTime());
-        });
-        
+
+        conversations.sort((a, b) -> b.getLastMessageTime().compareTo(a.getLastMessageTime()));
         return conversations;
     }
     

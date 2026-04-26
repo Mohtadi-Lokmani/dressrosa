@@ -43,6 +43,9 @@ public class ProductService {
     @Autowired
     private FollowRepository followRepository;
     
+    @Autowired
+    private ProductViewRepository productViewRepository;
+    
    
     @Transactional
     public ProductResponse createProduct(ProductRequest request, Long sellerId) {
@@ -111,15 +114,30 @@ public class ProductService {
     
     
     @Transactional
-    public ProductResponse getProductById(Long productId) {
+    public ProductResponse getProductById(Long productId, Long viewerId, String ipAddress) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         
-        // Increment view count
+        // Increment view count (legacy counter)
         product.setViewsCount(product.getViewsCount() + 1);
         productRepository.save(product);
         
+        // Track detailed view for analytics
+        trackProductView(product, viewerId, ipAddress);
+        
         return convertToResponse(product);
+    }
+    
+    private void trackProductView(Product product, Long viewerId, String ipAddress) {
+        User viewer = viewerId != null ? userRepository.findById(viewerId).orElse(null) : null;
+        
+        ProductView view = ProductView.builder()
+                .product(product)
+                .viewer(viewer)
+                .ipAddress(ipAddress)
+                .build();
+        
+        productViewRepository.save(view);
     }
     
     
@@ -130,8 +148,10 @@ public class ProductService {
             String searchTerm, 
             Pageable pageable) {
         
+        String safeSearch = (searchTerm == null || searchTerm.trim().isEmpty()) ? "" : searchTerm;
+        
         Page<Product> productsPage = productRepository.searchProducts(
-            categoryId, minPrice, maxPrice, searchTerm, ProductStatus.IN_STOCK, pageable
+            categoryId, minPrice, maxPrice, safeSearch, ProductStatus.IN_STOCK, pageable
         );
         
         return productsPage.map(this::convertToListResponse);
@@ -208,6 +228,23 @@ public class ProductService {
         }
         
         productRepository.delete(product);
+    }
+
+    @Transactional
+    public ProductResponse toggleBoost(Long productId, Long sellerId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        
+        // Check ownership
+        if (!product.getSeller().getUserId().equals(sellerId)) {
+            throw new RuntimeException("Unauthorized to boost this product");
+        }
+        
+        // Toggle boost
+        product.setIsBoosted(!product.getIsBoosted());
+        Product saved = productRepository.save(product);
+        
+        return convertToResponse(saved);
     }
     
    

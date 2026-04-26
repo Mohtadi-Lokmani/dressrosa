@@ -1,15 +1,21 @@
-import { User, Package, Heart, Settings, LogOut, Store, BarChart3 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, Package, Heart, Settings, LogOut, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/authStore';
 import { ROLES } from '../../../utils/constants';
 
 const ProfileDropdown = ({ onClose }) => {
   const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
   const isSeller = user?.role === ROLES.SELLER;
 
   const handleLogout = () => {
     logout();
     onClose();
+  };
+
+  const handleEnterStudio = () => {
+    onClose();
+    navigate('/studio');
   };
 
   return (
@@ -38,6 +44,20 @@ const ProfileDropdown = ({ onClose }) => {
         </div>
       </div>
 
+      {/* Enter Studio CTA — Sellers only */}
+      {isSeller && (
+        <div className="px-3 py-3 border-b border-gray-100 bg-gray-50/50">
+          <button
+            onClick={handleEnterStudio}
+            className="w-full flex items-center justify-center space-x-2.5 bg-gradient-to-r from-burgundy to-burgundy-light text-white font-bold text-sm py-3 px-4 rounded-xl hover:shadow-md hover:scale-[1.02] active:scale-100 transition-all duration-200 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Enter Studio</span>
+            <span className="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Seller</span>
+          </button>
+        </div>
+      )}
+
       {/* Menu Items */}
       <div className="py-2">
         {/* Common Items */}
@@ -51,14 +71,12 @@ const ProfileDropdown = ({ onClose }) => {
         </Link>
 
         <Link
-          to={isSeller ? '/seller/sales' : '/orders'}
+          to="/orders"
           onClick={onClose}
           className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
         >
           <Package className="w-5 h-5 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">
-            {isSeller ? 'My Sales' : 'My Orders'}
-          </span>
+          <span className="text-sm font-medium text-gray-700">My Orders</span>
         </Link>
 
         {!isSeller && (
@@ -70,31 +88,6 @@ const ProfileDropdown = ({ onClose }) => {
             <Heart className="w-5 h-5 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Wishlist</span>
           </Link>
-        )}
-
-        {/* Seller-specific Items */}
-        {isSeller && (
-          <>
-            <div className="my-2 border-t border-gray-200"></div>
-            
-            <Link
-              to="/seller/dashboard"
-              onClick={onClose}
-              className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
-            >
-              <BarChart3 className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Dashboard</span>
-            </Link>
-
-            <Link
-              to="/seller/products"
-              onClick={onClose}
-              className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
-            >
-              <Store className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">My Products</span>
-            </Link>
-          </>
         )}
 
         <div className="my-2 border-t border-gray-200"></div>
@@ -120,4 +113,4 @@ const ProfileDropdown = ({ onClose }) => {
   );
 };
 
-export default ProfileDropdown;
+export default ProfileDropdown;

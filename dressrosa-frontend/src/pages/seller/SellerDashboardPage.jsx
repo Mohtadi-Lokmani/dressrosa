@@ -172,7 +172,7 @@ const SellerDashboardPage = () => {
           </Link>
 
           <Link
-            to="/seller/sales"
+            to="/studio/orders"
             className="bg-white rounded-xl p-6 hover:shadow-md transition-all"
           >
             <div className="flex items-center space-x-4">
@@ -191,7 +191,7 @@ const SellerDashboardPage = () => {
         <div className="bg-white rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
-            <Link to="/seller/sales" className="text-burgundy hover:text-burgundy-dark text-sm font-medium">
+            <Link to="/studio/orders" className="text-burgundy hover:text-burgundy-dark text-sm font-medium">
               View All →
             </Link>
           </div>

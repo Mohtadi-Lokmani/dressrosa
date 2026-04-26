@@ -46,15 +46,28 @@ export const ROUTES = {
   MESSAGES: '/messages',
   NOTIFICATIONS: '/notifications',
   
-  // Seller
+  // Seller (legacy, kept for backward compat during migration)
   SELLER_DASHBOARD: '/seller/dashboard',
   ADD_PRODUCT: '/seller/products/add',
   EDIT_PRODUCT: '/seller/products/edit/:id',
   MY_PRODUCTS: '/seller/products',
-  MY_SALES: '/seller/sales',
   MANAGE_ORDER: '/seller/orders/:id',
   FOLLOWERS: '/seller/followers',
-  
+
+  // Studio (The new Seller Business Suite)
+  STUDIO_HOME: '/studio',
+  STUDIO_PRODUCTS: '/studio/products',
+  STUDIO_PRODUCTS_ADD: '/studio/products/add',
+  STUDIO_PRODUCTS_EDIT: '/studio/products/:id/edit',
+  STUDIO_ORDERS: '/studio/orders',
+  STUDIO_ANALYTICS: '/studio/analytics',
+  STUDIO_MESSAGES: '/studio/messages',
+  STUDIO_NOTIFICATIONS: '/studio/notifications',
+  STUDIO_REVIEWS: '/studio/reviews',
+  STUDIO_BOOST: '/studio/boost',
+  STUDIO_PROFILE_EDIT: '/studio/profile/edit',
+  STUDIO_SETTINGS: '/studio/settings',
+
   // Error
   NOT_FOUND: '*',
   UNAUTHORIZED: '/unauthorized',

@@ -13,10 +13,13 @@ public class UserDTO {
     private String telephone;
     private String address;
     private String profilePhoto;
+    private String bannerImage;
     private String bio;
     private Role role;
     private Boolean isVerified;
     private Boolean verificationBadge;
+    private String openingHours;
+    private String autoReplyMessage;
     private LocalDateTime createdAt;
     
     // Statistics

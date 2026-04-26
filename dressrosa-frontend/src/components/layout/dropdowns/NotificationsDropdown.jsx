@@ -41,8 +41,8 @@ const NotificationsDropdown = ({ onClose }) => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const data = await notificationService.getRecent();
-      setNotifications(data || []);
+      const data = await notificationService.getAll({ audience: 'BUYER', size: 10 });
+      setNotifications(data.content || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {

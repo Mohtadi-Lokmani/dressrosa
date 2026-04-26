@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
 import toast from 'react-hot-toast';
+import './authBotanical.css';
+
+const img = (file) => `${import.meta.env.BASE_URL}assets/images/${file}`;
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loading } = useAuthStore();
-  
+  const { login, loading, clearError } = useAuthStore();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,10 +17,13 @@ const LoginPage = () => {
 
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -28,201 +31,134 @@ const LoginPage = () => {
 
   const validate = () => {
     const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'That does not look like a valid email address. Check the format and try again.';
     }
-
     if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'Password is required.';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearError();
+    setErrors({});
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error('Please fix the errors below before continuing.');
+      return;
+    }
 
     try {
-      await login(formData.email, formData.password);
-      toast.success('Welcome back!');
+      await login(formData.email.trim(), formData.password);
+      toast.success('Successfully stepped into the Garden!');
       navigate('/');
-    } catch (error) {
-      // Error toast is already shown by auth store
-      console.error('Login error:', error);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        'Incorrect email or password. Check your details and try again.';
+      setErrors({ password: msg });
+      clearError();
+      toast.error(msg);
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast.info('Google login coming soon!');
-  };
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Hero Image */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-burgundy to-burgundy-dark relative overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
-          <div className="max-w-md text-center">
-            <h1 className="text-5xl font-bold mb-6">Welcome to Dressrosa</h1>
-            <p className="text-lg text-white/90 mb-8">
-              Your premium social marketplace for fashion and style. Connect, shop, and share with a community of fashion lovers.
-            </p>
-            
-            {/* Decorative Image/Illustration */}
-            <div className="mt-12 relative">
-              <div className="w-64 h-64 mx-auto bg-white bg-opacity-10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white border-opacity-20">
-                <div className="text-8xl">👗</div>
-              </div>
-            </div>
-          </div>
+    <div className="auth-botanical-page min-h-screen relative flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="auth-botanical-florals" aria-hidden="true">
+        <img src={img('rose_left_vertical.png')} alt="" className="auth-floral-left-vertical" />
+        <img src={img('vintage_roses_right.png')} alt="" className="auth-floral-right-hanging" />
+        <img src={img('rose_bottom_corner.png')} alt="" className="auth-floral-bottom-corner" />
+      </div>
+
+      <div className="absolute top-0 w-full flex justify-between items-center px-8 py-6 z-20">
+        <Link
+          to="/"
+          className="text-2xl font-serif font-medium text-burgundy italic cursor-pointer relative group"
+        >
+          Dressrosa
+          <div className="absolute bottom-[-2px] left-0 w-0 h-[1px] bg-burgundy transition-all duration-300 group-hover:w-full" />
+        </Link>
+        <div className="flex items-center space-x-2 text-xs">
+          <span className="text-gray-500">New to the Garden?</span>
+          <Link to="/register" className="text-burgundy font-bold hover:underline">
+            Sign up
+          </Link>
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md">
-          {/* Logo for Mobile */}
-          <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-burgundy rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">D</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">Dressrosa</span>
-            </Link>
-          </div>
+      <div className="relative z-10 w-full max-w-[500px] bg-white rounded-[2rem] shadow-2xl shadow-burgundy/5 p-10 sm:p-14 border border-rose-50/50">
+        <div className="mb-10 text-left">
+          <h2 className="text-4xl font-serif text-gray-900 mb-3 tracking-tight">Sign In</h2>
+          <p className="text-gray-500 text-sm font-light">Email and password only.</p>
+        </div>
 
-          {/* Welcome Text */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">WELCOME BACK</h2>
-            <p className="text-gray-600">Sign in to continue to your account</p>
-          </div>
-
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Input */}
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              icon={Mail}
-              required
-            />
-
-            {/* Password Input */}
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              icon={Lock}
-              required
-            />
-
-            {/* Forgot Password */}
-            <div className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-burgundy hover:text-burgundy-dark transition-colors"
-              >
-                Forgot Password?
-              </Link>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-8">
+            <div className="flex flex-col">
+              <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="your@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                autoComplete="email"
+                className={`border-b ${errors.email ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              {errors.email && <span className="text-[10px] text-red-500 mt-1.5">{errors.email}</span>}
             </div>
 
-            {/* Login Button */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-            >
-              LOG IN
-            </Button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+            <div className="flex flex-col relative">
+              <div className="flex justify-between items-center mb-3 gap-3">
+                <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em]">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => toast('Forgot password is not available yet.')}
+                  className="text-[10px] text-[#b49891] hover:text-burgundy font-semibold shrink-0"
+                >
+                  Forgot password?
+                </button>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">OR</span>
-              </div>
+              <input
+                type="password"
+                name="password"
+                placeholder="********"
+                value={formData.password}
+                onChange={handleChange}
+                autoComplete="current-password"
+                className={`border-b ${errors.password ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              {errors.password && (
+                <span className="text-[10px] text-red-500 mt-1.5">{errors.password}</span>
+              )}
             </div>
+          </div>
 
-            {/* Google Login */}
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              fullWidth
-              onClick={handleGoogleLogin}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Log in with Google
-            </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#6a0d24] text-white font-bold tracking-[0.2em] text-[11px] uppercase py-4 rounded-full mt-12 hover:bg-[#800020] transition-colors shadow-xl shadow-burgundy/20 active:scale-[0.99] disabled:opacity-70 flex justify-center items-center space-x-2"
+          >
+            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
+            {!loading && <span className="font-serif italic text-sm ml-1">⚘</span>}
+          </button>
 
-            {/* Create Account */}
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              fullWidth
-              onClick={() => navigate('/register')}
-            >
-              Create A New Account
-            </Button>
-          </form>
-
-          {/* Terms & Privacy */}
-          <p className="mt-8 text-center text-xs text-gray-500">
-            By continuing, you agree to our{' '}
-            <Link to="/terms" className="text-burgundy hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-burgundy hover:underline">
-              Privacy Policy
+          <p className="text-center text-xs text-gray-500 mt-8">
+            Need an account?{' '}
+            <Link to="/register" className="text-burgundy font-semibold hover:underline">
+              Sign up
             </Link>
           </p>
-        </div>
+        </form>
       </div>
     </div>
   );

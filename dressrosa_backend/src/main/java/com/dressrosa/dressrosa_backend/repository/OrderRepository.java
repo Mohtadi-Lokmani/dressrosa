@@ -51,7 +51,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Get seller's total sales
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
            "WHERE o.seller.userId = :sellerId AND o.status = 'DELIVERED'")
-    BigDecimal getTotalSales(@Param("sellerId") Long sellerId);
+    java.math.BigDecimal getTotalSales(@Param("sellerId") Long sellerId);
     
     // Get seller's sales for current month
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
@@ -59,7 +59,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "AND o.status = 'DELIVERED' " +
            "AND MONTH(o.orderDate) = MONTH(CURRENT_DATE) " +
            "AND YEAR(o.orderDate) = YEAR(CURRENT_DATE)")
-    BigDecimal getCurrentMonthSales(@Param("sellerId") Long sellerId);
+    java.math.BigDecimal getCurrentMonthSales(@Param("sellerId") Long sellerId);
     
     // Find orders by date range
     List<Order> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate);
@@ -67,4 +67,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Find orders placed today
     @Query("SELECT o FROM Order o WHERE o.orderDate >= CURRENT_DATE")
     List<Order> findTodayOrders();
+
+    // For aggregate charts: sum revenue per day
+    @Query("SELECT CAST(o.orderDate AS date) as orderDay, SUM(o.totalAmount) as dailySum " +
+           "FROM Order o " +
+           "WHERE o.seller.userId = :sellerId AND o.status = 'DELIVERED' AND o.orderDate >= :since " +
+           "GROUP BY CAST(o.orderDate AS date) " +
+           "ORDER BY orderDay ASC")
+    List<Object[]> findDailyRevenueForSeller(@Param("sellerId") Long sellerId, @Param("since") LocalDateTime since);
 }

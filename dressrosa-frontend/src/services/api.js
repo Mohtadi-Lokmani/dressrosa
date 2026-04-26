@@ -35,17 +35,16 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || 'Something went wrong';
     
     // Handle authentication errors
+    const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+
     if (error.response?.status === 401 || error.response?.status === 403) {
       storage.auth.clearAuth();
-      
-      // Don't redirect on login/register endpoints
-      const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
+
       if (!isAuthEndpoint) {
         toast.error('Session expired. Please login again.');
         window.location.href = '/login';
       }
-    } else {
-      // Show error toast for other errors
+    } else if (!isAuthEndpoint) {
       toast.error(message);
     }
     

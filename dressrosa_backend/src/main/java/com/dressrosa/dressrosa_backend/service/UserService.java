@@ -2,6 +2,8 @@ package com.dressrosa.dressrosa_backend.service;
 
 import com.dressrosa.dressrosa_backend.dto.user.*;
 import com.dressrosa.dressrosa_backend.model.User;
+import com.dressrosa.dressrosa_backend.model.ProductView;
+import com.dressrosa.dressrosa_backend.model.ProfileView;
 import com.dressrosa.dressrosa_backend.repository.*;
 import com.dressrosa.dressrosa_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,12 @@ public class UserService {
     
     @Autowired
     private OrderRepository orderRepository;
+    
+    @Autowired
+    private ProductViewRepository productViewRepository;
+
+    @Autowired
+    private ProfileViewRepository profileViewRepository;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -83,6 +91,15 @@ public class UserService {
         if (request.getBio() != null) {
             user.setBio(request.getBio());
         }
+        if (request.getBannerImage() != null) {
+            user.setBannerImage(request.getBannerImage());
+        }
+        if (request.getOpeningHours() != null) {
+            user.setOpeningHours(request.getOpeningHours());
+        }
+        if (request.getAutoReplyMessage() != null) {
+            user.setAutoReplyMessage(request.getAutoReplyMessage());
+        }
         
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
@@ -113,32 +130,41 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Create upload directory if not exists
+        String photoUrl = saveFile(file, "profile_");
+        user.setProfilePhoto(photoUrl);
+        userRepository.save(user);
+        return photoUrl;
+    }
+
+    public String saveBannerImage(Long userId, MultipartFile file) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        String bannerUrl = saveFile(file, "banner_");
+        user.setBannerImage(bannerUrl);
+        userRepository.save(user);
+        return bannerUrl;
+    }
+
+    private String saveFile(MultipartFile file, String prefix) throws IOException {
         Path uploadPath = Paths.get(UPLOAD_DIR);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
         
-        // Generate unique filename
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null && originalFilename.contains(".")
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : ".jpg";
-        String filename = UUID.randomUUID().toString() + extension;
+        String filename = prefix + UUID.randomUUID().toString() + extension;
         
-        // Save file
         Path filePath = uploadPath.resolve(filename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // Update user profile photo URL
-        String photoUrl = "/uploads/photos/" + filename;
-        user.setProfilePhoto(photoUrl);
-        userRepository.save(user);
-        
-        return photoUrl;
+        return "/uploads/photos/" + filename;
     }
   
-    public SellerProfileDTO getSellerProfile(Long sellerId) {
+    public SellerProfileDTO getSellerProfile(Long sellerId, Long viewerId, String ipAddress) {
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
         
@@ -147,6 +173,7 @@ public class UserService {
         dto.setUserName(seller.getUserName());
         dto.setProfilePhoto(seller.getProfilePhoto());
         dto.setBio(seller.getBio());
+        dto.setBannerImage(seller.getBannerImage());
         dto.setVerificationBadge(seller.getVerificationBadge());
         dto.setCreatedAt(seller.getCreatedAt());
         
@@ -156,36 +183,54 @@ public class UserService {
         dto.setFollowingCount(followRepository.countByFollowerUserId(sellerId));
         dto.setAverageRating(4.5); 
         
+        // Track view
+        trackProfileView(seller, viewerId, ipAddress);
+        
         return dto;
+    }
+    
+    private void trackProfileView(User seller, Long viewerId, String ipAddress) {
+        User viewer = viewerId != null ? userRepository.findById(viewerId).orElse(null) : null;
+        
+        ProfileView view = ProfileView.builder()
+                .seller(seller)
+                .viewer(viewer)
+                .ipAddress(ipAddress)
+                .build();
+                
+        profileViewRepository.save(view);
     }
     
   
     public SellerDashboardResponse getSellerDashboard(Long sellerId) {
         SellerDashboardResponse dashboard = new SellerDashboardResponse();
-        
+        java.time.LocalDateTime startOfToday = java.time.LocalDate.now().atStartOfDay();
+        java.time.LocalDateTime startOfWeek = java.time.LocalDate.now().minusDays(7).atStartOfDay();
+
         // Product stats
         dashboard.setTotalProducts(productRepository.countBySellerUserId(sellerId));
-        dashboard.setTotalViews(0); 
-        dashboard.setTodayViews(0);
-        dashboard.setWeekViews(0);
+        dashboard.setTotalViews((int) productViewRepository.countBySellerId(sellerId)); 
+        dashboard.setTodayViews((int) productViewRepository.countBySellerIdAndRecent(sellerId, startOfToday));
+        dashboard.setWeekViews((int) productViewRepository.countBySellerIdAndRecent(sellerId, startOfWeek));
         
         // Social stats
         dashboard.setFollowersCount(followRepository.countByFollowingUserId(sellerId));
-        dashboard.setTotalLikes(0L);
+        dashboard.setTotalLikes(0L); // Needs LikeRepository count by seller
         
         // Message stats
         dashboard.setUnreadMessages(0L); 
         dashboard.setTodayMessages(0L);
         
         // Sales stats
-        dashboard.setTotalSales(orderRepository.getTotalSales(sellerId));
-        dashboard.setCurrentMonthSales(orderRepository.getCurrentMonthSales(sellerId));
+        java.math.BigDecimal totalSales = orderRepository.getTotalSales(sellerId);
+        java.math.BigDecimal monthSales = orderRepository.getCurrentMonthSales(sellerId);
+        dashboard.setTotalSales(totalSales != null ? totalSales.longValue() : 0L);
+        dashboard.setCurrentMonthSales(monthSales != null ? monthSales.longValue() : 0L);
         
         // Order stats
         dashboard.setTotalOrders(orderRepository.countBySellerUserId(sellerId));
         dashboard.setPendingOrders(orderRepository.countBySellerUserIdAndStatus(sellerId, 
             com.dressrosa.dressrosa_backend.model.OrderStatus.PENDING));
-      
         
         return dashboard;
     }
@@ -201,6 +246,67 @@ public class UserService {
     }
     
   
+    public StudioTodoResponse getStudioTodo(Long sellerId) {
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        
+        java.util.List<StudioTodoResponse.TodoItem> items = new java.util.ArrayList<>();
+        
+        // 1. Profile Completion Check
+        if (seller.getBannerImage() == null || seller.getProfilePhoto() == null) {
+            items.add(StudioTodoResponse.TodoItem.builder()
+                .id("setup_photos")
+                .title("Visualise Your Atelier")
+                .description("Add a profile photo and banner to attract more customers.")
+                .type("SETUP")
+                .priority("HIGH")
+                .actionUrl("/studio/profile/edit")
+                .build());
+        }
+        
+        if (seller.getBio() == null || seller.getBio().isEmpty()) {
+            items.add(StudioTodoResponse.TodoItem.builder()
+                .id("setup_bio")
+                .title("Tell Your Story")
+                .description("Write a short bio about your atelier.")
+                .type("SETUP")
+                .priority("MEDIUM")
+                .actionUrl("/studio/profile/edit")
+                .build());
+        }
+        
+        // 2. Orders Check
+        long pendingOrders = orderRepository.countBySellerUserIdAndStatus(sellerId, 
+            com.dressrosa.dressrosa_backend.model.OrderStatus.PENDING);
+        if (pendingOrders > 0) {
+            items.add(StudioTodoResponse.TodoItem.builder()
+                .id("pending_orders")
+                .title(pendingOrders + " Pending Orders")
+                .description("You have orders waiting to be processed.")
+                .type("ORDER")
+                .priority("HIGH")
+                .actionUrl("/studio/orders")
+                .build());
+        }
+        
+        // 3. Growth Suggestion
+        long boostedCount = productRepository.findByIsBoostedTrue().stream()
+            .filter(p -> p.getSeller().getUserId().equals(sellerId))
+            .count();
+        if (boostedCount == 0) {
+            items.add(StudioTodoResponse.TodoItem.builder()
+                .id("boost_suggestion")
+                .title("Grow Your Influence")
+                .description("Try boosting your first product to reach 3x more buyers.")
+                .type("SETUP")
+                .priority("MEDIUM")
+                .actionUrl("/studio/boost")
+                .build());
+        }
+        
+        return new StudioTodoResponse(items);
+    }
+
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setUserId(user.getUserId());
@@ -209,10 +315,13 @@ public class UserService {
         dto.setTelephone(user.getTelephone());
         dto.setAddress(user.getAddress());
         dto.setProfilePhoto(user.getProfilePhoto());
+        dto.setBannerImage(user.getBannerImage());
         dto.setBio(user.getBio());
         dto.setRole(user.getRole());
         dto.setIsVerified(user.getIsVerified());
         dto.setVerificationBadge(user.getVerificationBadge());
+        dto.setOpeningHours(user.getOpeningHours());
+        dto.setAutoReplyMessage(user.getAutoReplyMessage());
         dto.setCreatedAt(user.getCreatedAt());
         
         // Populate stats

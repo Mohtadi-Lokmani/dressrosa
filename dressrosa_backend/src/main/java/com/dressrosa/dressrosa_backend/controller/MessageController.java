@@ -69,6 +69,28 @@ public class MessageController {
         );
         return ResponseEntity.ok(conversations);
     }
+
+    @GetMapping("/conversations/studio")
+    public ResponseEntity<List<ConversationResponse>> getStudioConversations() {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        List<ConversationResponse> conversations = messageService.getStudioConversations(
+            currentUser.getUserId()
+        );
+        return ResponseEntity.ok(conversations);
+    }
+
+    @GetMapping("/conversations/profile")
+    public ResponseEntity<List<ConversationResponse>> getProfileConversations() {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        List<ConversationResponse> conversations = messageService.getProfileConversations(
+            currentUser.getUserId()
+        );
+        return ResponseEntity.ok(conversations);
+    }
     
     @PutMapping("/{messageId}/read")
     public ResponseEntity<ApiResponse> markAsRead(@PathVariable Long messageId) {

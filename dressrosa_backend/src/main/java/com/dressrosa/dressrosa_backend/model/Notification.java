@@ -23,6 +23,10 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private NotificationType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NotificationAudience audience = NotificationAudience.BUYER;
     
     @Column(nullable = false, length = 200)
     private String title;

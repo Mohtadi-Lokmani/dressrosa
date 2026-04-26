@@ -5,6 +5,7 @@ export const useMessages = (conversationUserId, options = {}) => {
   const {
     pollingInterval = 3000, // Poll every 3 seconds
     autoScroll = true,
+    merchantId = null,
   } = options;
 
   const [messages, setMessages] = useState([]);
@@ -50,7 +51,7 @@ export const useMessages = (conversationUserId, options = {}) => {
 
     try {
       setSending(true);
-      const newMessage = await messageService.sendMessage(conversationUserId, content.trim());
+      const newMessage = await messageService.sendMessage(conversationUserId, content.trim(), merchantId);
       
       // Add message to list immediately
       setMessages(prev => [...prev, newMessage]);

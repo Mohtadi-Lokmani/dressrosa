@@ -132,6 +132,7 @@ public class OrderService {
             notificationService.createNotification(
                 sellerId,
                 NotificationType.ORDER,
+                NotificationAudience.SELLER,
                 "New Order Received",
                 "You have a new order from " + buyer.getUserName(),
                 savedOrder.getOrderId()
@@ -201,6 +202,7 @@ public class OrderService {
         notificationService.createNotification(
             order.getBuyer().getUserId(),
             NotificationType.ORDER,
+            NotificationAudience.BUYER,
             "Order Status Updated",
             message,
             orderId
@@ -251,9 +253,14 @@ public class OrderService {
             ? order.getSeller().getUserId() 
             : order.getBuyer().getUserId();
         
+        NotificationAudience audience = userId.equals(order.getBuyer().getUserId())
+            ? NotificationAudience.SELLER
+            : NotificationAudience.BUYER;
+        
         notificationService.createNotification(
             notifyUserId,
             NotificationType.ORDER,
+            audience,
             "Order Cancelled",
             "Order #" + orderId + " has been cancelled",
             orderId

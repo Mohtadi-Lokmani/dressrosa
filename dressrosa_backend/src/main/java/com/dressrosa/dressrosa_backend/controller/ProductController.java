@@ -7,6 +7,7 @@ import com.dressrosa.dressrosa_backend.dto.user.UserDTO;
 import com.dressrosa.dressrosa_backend.service.ProductService;
 import com.dressrosa.dressrosa_backend.service.UserService;
 import com.dressrosa.dressrosa_backend.util.SecurityUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -85,8 +86,21 @@ public class ProductController {
     
    
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
-        ProductResponse product = productService.getProductById(id);
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id, HttpServletRequest request) {
+        Long viewerId = null;
+        try {
+            String email = SecurityUtil.getCurrentUserEmail();
+            if (email != null && !email.equals("anonymousUser")) {
+                UserDTO currentUser = userService.getCurrentUser(email);
+                viewerId = currentUser.getUserId();
+            }
+        } catch (Exception e) {
+            // Not logged in or error getting user
+        }
+        
+        String ipAddress = request.getRemoteAddr();
+        
+        ProductResponse product = productService.getProductById(id, viewerId, ipAddress);
         return ResponseEntity.ok(product);
     }
     
@@ -141,5 +155,15 @@ public class ProductController {
         
         productService.deleteProduct(id, currentUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success("Product deleted successfully"));
+    }
+
+    @PostMapping("/{id}/boost")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ProductResponse> toggleBoost(@PathVariable Long id) {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        ProductResponse updated = productService.toggleBoost(id, currentUser.getUserId());
+        return ResponseEntity.ok(updated);
     }
 }

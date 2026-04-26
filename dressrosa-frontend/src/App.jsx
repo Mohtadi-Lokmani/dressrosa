@@ -30,7 +30,21 @@ import SellerDashboardPage from './pages/seller/SellerDashboardPage';
 import AddProductPage from './pages/seller/AddProductPage';
 import EditProductPage from './pages/seller/EditProductPage';
 import MyProductsPage from './pages/seller/MyProductsPage';
-import MySalesPage from './pages/seller/MySalesPage';
+
+// Studio (Seller Business Suite)
+import StudioLayout from './components/studio/StudioLayout';
+import StudioHomePage from './pages/studio/StudioHomePage';
+import StudioComingSoon from './pages/studio/StudioComingSoon';
+import StudioProductsPage from './pages/studio/StudioProductsPage';
+import StudioAddProductPage from './pages/studio/StudioAddProductPage';
+import StudioEditProductPage from './pages/studio/StudioEditProductPage';
+import StudioOrdersPage from './pages/studio/StudioOrdersPage';
+import StudioAnalyticsPage from './pages/studio/StudioAnalyticsPage';
+import StudioMessagesPage from './pages/studio/StudioMessagesPage';
+import StudioNotificationsPage from './pages/studio/StudioNotificationsPage';
+import StudioBoostPage from './pages/studio/StudioBoostPage';
+import StudioProfileEditorPage from './pages/studio/StudioProfileEditorPage';
+import StudioSettingsPage from './pages/studio/StudioSettingsPage';
 
 // Temporary placeholder
 const ComingSoon = ({ title }) => (
@@ -147,19 +161,35 @@ function App() {
     </RoleGuard>
   } 
 />
-<Route 
-  path="/seller/sales" 
-  element={
-    <RoleGuard allowedRoles={[ROLES.SELLER]}>
-      <MySalesPage />
-    </RoleGuard>
-  } 
-/>
-         
 
           {/* Error Pages */}
           <Route path="/unauthorized" element={<ComingSoon title="403 - Unauthorized" />} />
           <Route path="*" element={<ComingSoon title="404 - Not Found" />} />
+        </Route>
+
+        {/* Studio Routes — Seller Business Suite (completely separate from MainLayout) */}
+        <Route
+          path="/studio"
+          element={
+            <ProtectedRoute>
+              <RoleGuard allowedRoles={[ROLES.SELLER]}>
+                <StudioLayout />
+              </RoleGuard>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<StudioHomePage />} />
+          <Route path="products" element={<StudioProductsPage />} />
+          <Route path="products/add" element={<StudioAddProductPage />} />
+          <Route path="products/:id/edit" element={<StudioEditProductPage />} />
+          <Route path="orders" element={<StudioOrdersPage />} />
+          <Route path="analytics" element={<StudioAnalyticsPage />} />
+          <Route path="messages" element={<StudioMessagesPage />} />
+          <Route path="notifications" element={<StudioNotificationsPage />} />
+          <Route path="boost" element={<StudioBoostPage />} />
+          <Route path="reviews" element={<StudioComingSoon title="Reviews" description="Manage and respond to buyer reviews." />} />
+          <Route path="profile/edit" element={<StudioProfileEditorPage />} />
+          <Route path="settings" element={<StudioSettingsPage />} />
         </Route>
       </Routes>
     </>

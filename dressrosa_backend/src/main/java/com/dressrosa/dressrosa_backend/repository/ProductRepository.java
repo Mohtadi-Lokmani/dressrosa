@@ -33,7 +33,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByStatus(ProductStatus status, Pageable pageable);
     
     // Find IN_STOCK products only
-    @Query("SELECT p FROM Product p WHERE p.status = 'IN_STOCK'")
+    @Query("SELECT p FROM Product p WHERE p.status = 'IN_STOCK' ORDER BY p.isBoosted DESC, p.createdAt DESC")
     Page<Product> findAllInStock(Pageable pageable);
     
     // Find products by category
@@ -59,19 +59,22 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByIsBoostedTrue(Pageable pageable);
     
     // Complex search query
-   @Query("SELECT p FROM Product p " +
-       "WHERE (:categoryId IS NULL OR p.category.categoryId = :categoryId) " +
-       "AND (:status IS NULL OR p.status = :status) " +
-       "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
-       "AND (:maxPrice IS NULL OR p.price <= :maxPrice)")
-Page<Product> searchProducts(
-    @Param("categoryId") Long categoryId,
-    @Param("minPrice") BigDecimal minPrice,
-    @Param("maxPrice") BigDecimal maxPrice,
-    @Param("search") String search,
-    @Param("status") ProductStatus status,
-    Pageable pageable
-);
+    @Query("SELECT p FROM Product p " +
+           "WHERE (:categoryId IS NULL OR p.category.categoryId = :categoryId) " +
+           "AND (:status IS NULL OR p.status = :status) " +
+           "AND (:minPrice IS NULL OR p.price >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR p.price <= :maxPrice) " +
+           "AND (:search = '' OR LOWER(p.title) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY p.isBoosted DESC, p.createdAt DESC")
+    Page<Product> searchProducts(
+        @Param("categoryId") Long categoryId,
+        @Param("minPrice") BigDecimal minPrice,
+        @Param("maxPrice") BigDecimal maxPrice,
+        @Param("search") String search,
+        @Param("status") ProductStatus status,
+        Pageable pageable
+    );
     
     // Count products by seller
     long countBySellerUserId(Long sellerId);

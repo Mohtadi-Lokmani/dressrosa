@@ -67,6 +67,7 @@ public class SocialService {
             notificationService.createNotification(
                 product.getSeller().getUserId(),
                 NotificationType.LIKE,
+                NotificationAudience.SELLER,
                 "New Like",
                 user.getUserName() + " liked your product: " + product.getTitle(),
                 productId
@@ -169,6 +170,7 @@ public class SocialService {
         notificationService.createNotification(
             product.getSeller().getUserId(),
             NotificationType.REVIEW,
+            NotificationAudience.SELLER,
             "New Review",
             user.getUserName() + " reviewed " + product.getTitle() + 
             " - " + request.getRate() + " stars",
@@ -234,6 +236,7 @@ public class SocialService {
         notificationService.createNotification(
             sellerId,
             NotificationType.FOLLOW,
+            NotificationAudience.SELLER,
             "New Follower",
             follower.getUserName() + " started following you",
             userId

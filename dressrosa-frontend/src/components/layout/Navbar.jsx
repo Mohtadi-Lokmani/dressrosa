@@ -68,7 +68,7 @@ const Navbar = () => {
 
   const fetchNotificationCount = async () => {
     try {
-      const count = await notificationService.getUnreadCount();
+      const count = await notificationService.getUnreadCount('BUYER');
       setUnreadNotificationCount(count || 0);
     } catch (error) {
       console.error('Error fetching notification count:', error);

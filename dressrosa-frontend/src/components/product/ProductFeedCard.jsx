@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Share2, Flag } from 'lucide-react';
+import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Share2, Flag, Sparkles } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import { formatPrice } from '../../utils/formatters';
@@ -222,6 +222,13 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
         {product.status === 'SOLD_OUT' && (
           <div className="absolute top-3 left-3">
             <Badge variant="danger">Sold Out</Badge>
+          </div>
+        )}
+
+        {product.isBoosted && (
+          <div className="absolute top-3 left-3 z-10 flex items-center space-x-1.5 bg-gray-900/90 text-white px-2.5 py-1 rounded-full backdrop-blur-md shadow-lg">
+            <Sparkles className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+            <span className="text-[10px] font-black uppercase tracking-wider">Featured</span>
           </div>
         )}
       </Link>

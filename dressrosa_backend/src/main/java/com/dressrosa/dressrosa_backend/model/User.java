@@ -34,7 +34,10 @@ public class User {
     @Column(unique = true, nullable = false, length = 150)
     private String email;
     
-    @Column(length = 20)
+    @Column(name = "shop_name", length = 150)
+    private String shopName;
+    
+    @Column(length = 20, unique = true)
     private String telephone;
     
     @Column(columnDefinition = "TEXT")
@@ -45,6 +48,9 @@ public class User {
     
     @Column(name = "profile_photo", length = 500)
     private String profilePhoto;
+
+    @Column(name = "banner_image", length = 500)
+    private String bannerImage;
     
     @Column(columnDefinition = "TEXT")
     private String bio;
@@ -58,6 +64,12 @@ public class User {
     
     @Column(name = "verification_badge")
     private Boolean verificationBadge = false;
+
+    @Column(columnDefinition = "TEXT")
+    private String openingHours;
+
+    @Column(name = "auto_reply_message", columnDefinition = "TEXT")
+    private String autoReplyMessage;
     
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

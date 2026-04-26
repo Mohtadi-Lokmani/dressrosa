@@ -9,6 +9,7 @@ public class ConversationResponse {
     private Long otherUserId;
     private String otherUserName;
     private String otherUserPhoto;
+    private Long merchantId;
     
     // Last message info
     private String lastMessage;

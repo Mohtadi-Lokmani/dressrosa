@@ -2,6 +2,7 @@ package com.dressrosa.dressrosa_backend.service;
 
 import com.dressrosa.dressrosa_backend.dto.social.NotificationResponse;
 import com.dressrosa.dressrosa_backend.model.Notification;
+import com.dressrosa.dressrosa_backend.model.NotificationAudience;
 import com.dressrosa.dressrosa_backend.model.NotificationType;
 import com.dressrosa.dressrosa_backend.model.User;
 import com.dressrosa.dressrosa_backend.repository.NotificationRepository;
@@ -29,6 +30,7 @@ public class NotificationService {
     public Notification createNotification(
             Long userId, 
             NotificationType type, 
+            NotificationAudience audience,
             String title, 
             String message, 
             Long relatedId) {
@@ -39,6 +41,7 @@ public class NotificationService {
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setType(type);
+        notification.setAudience(audience != null ? audience : NotificationAudience.BUYER);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setRelatedId(relatedId);
@@ -50,11 +53,30 @@ public class NotificationService {
         
         return saved;
     }
+
+    /**
+     * Overloaded version for backward compatibility, defaults to BUYER audience.
+     */
+    @Transactional
+    public Notification createNotification(
+            Long userId, 
+            NotificationType type, 
+            String title, 
+            String message, 
+            Long relatedId) {
+        return createNotification(userId, type, NotificationAudience.BUYER, title, message, relatedId);
+    }
    
     public Page<NotificationResponse> getUserNotifications(Long userId, Pageable pageable) {
         Page<Notification> notifications = notificationRepository
                 .findByUserUserIdOrderByCreatedAtDesc(userId, pageable);
         
+        return notifications.map(this::convertToResponse);
+    }
+
+    public Page<NotificationResponse> getAudienceNotifications(Long userId, NotificationAudience audience, Pageable pageable) {
+        Page<Notification> notifications = notificationRepository
+                .findByUserUserIdAndAudienceOrderByCreatedAtDesc(userId, audience, pageable);
         return notifications.map(this::convertToResponse);
     }
     
@@ -63,6 +85,12 @@ public class NotificationService {
         Page<Notification> notifications = notificationRepository
                 .findByUserUserIdAndIsReadFalseOrderByCreatedAtDesc(userId, pageable);
         
+        return notifications.map(this::convertToResponse);
+    }
+
+    public Page<NotificationResponse> getUnreadAudienceNotifications(Long userId, NotificationAudience audience, Pageable pageable) {
+        Page<Notification> notifications = notificationRepository
+                .findByUserUserIdAndAudienceAndIsReadFalseOrderByCreatedAtDesc(userId, audience, pageable);
         return notifications.map(this::convertToResponse);
     }
     
@@ -91,6 +119,10 @@ public class NotificationService {
   
     public long getUnreadCount(Long userId) {
         return notificationRepository.countByUserUserIdAndIsReadFalse(userId);
+    }
+
+    public long getUnreadCount(Long userId, NotificationAudience audience) {
+        return notificationRepository.countByUserUserIdAndAudienceAndIsReadFalse(userId, audience);
     }
     
   
@@ -145,12 +177,13 @@ public class NotificationService {
     public void createBatchNotifications(
             List<Long> userIds, 
             NotificationType type, 
+            NotificationAudience audience,
             String title, 
             String message, 
             Long relatedId) {
         
         for (Long userId : userIds) {
-            createNotification(userId, type, title, message, relatedId);
+            createNotification(userId, type, audience, title, message, relatedId);
         }
     }
    
@@ -159,6 +192,7 @@ public class NotificationService {
         
         response.setNotificationId(notification.getNotificationId());
         response.setType(notification.getType());
+        response.setAudience(notification.getAudience());
         response.setTitle(notification.getTitle());
         response.setMessage(notification.getMessage());
         response.setIsRead(notification.getIsRead());

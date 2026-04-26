@@ -3,10 +3,11 @@ import { ENDPOINTS } from '../config/api.config';
 
 export const messageService = {
   // Send a message to a user
-  sendMessage: async (receiverId, content) => {
+  sendMessage: async (receiverId, content, merchantId = null) => {
     const response = await api.post(ENDPOINTS.MESSAGES.SEND, {
       receiverId,
       content,
+      merchantId,
     });
     return response.data;
   },
@@ -29,6 +30,18 @@ export const messageService = {
     const response = await api.get(ENDPOINTS.MESSAGES.CONVERSATIONS, {
       params: { page, size },
     });
+    return response.data;
+  },
+
+  // Get Studio (Seller) Conversations
+  getStudioConversations: async () => {
+    const response = await api.get(ENDPOINTS.MESSAGES.CONVERSATIONS_STUDIO);
+    return response.data;
+  },
+
+  // Get Profile (Buyer) Conversations
+  getProfileConversations: async () => {
+    const response = await api.get(ENDPOINTS.MESSAGES.CONVERSATIONS_PROFILE);
     return response.data;
   },
 

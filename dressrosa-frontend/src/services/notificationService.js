@@ -6,7 +6,10 @@ export const notificationService = {
    * Get all notifications
    */
   getAll: async (params = {}) => {
-    const response = await api.get(ENDPOINTS.NOTIFICATIONS.ALL, { params });
+    const { audience, page, size } = params;
+    const response = await api.get(ENDPOINTS.NOTIFICATIONS.ALL, { 
+      params: { audience, page, size } 
+    });
     return response.data;
   },
 
@@ -14,7 +17,10 @@ export const notificationService = {
    * Get unread notifications
    */
   getUnread: async (params = {}) => {
-    const response = await api.get(ENDPOINTS.NOTIFICATIONS.UNREAD, { params });
+    const { audience, page, size } = params;
+    const response = await api.get(ENDPOINTS.NOTIFICATIONS.UNREAD, { 
+      params: { audience, page, size }
+    });
     return response.data;
   },
 
@@ -29,8 +35,10 @@ export const notificationService = {
   /**
    * Get unread count
    */
-  getUnreadCount: async () => {
-    const response = await api.get(ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT);
+  getUnreadCount: async (audience = null) => {
+    const response = await api.get(ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT, {
+      params: { audience }
+    });
     return response.data;
   },
 

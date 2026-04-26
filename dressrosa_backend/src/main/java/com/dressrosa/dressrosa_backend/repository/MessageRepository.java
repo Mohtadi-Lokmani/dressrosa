@@ -60,4 +60,15 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 @Query("SELECT COUNT(m) FROM Message m WHERE m.receiver.userId = :userId " +
        "AND CAST(m.sentAt AS DATE) = CURRENT_DATE")
 long countTodayMessages(@Param("userId") Long userId);
+
+    // Studio Inbox: Conversations where current user is the merchant
+    @Query("SELECT DISTINCT m FROM Message m WHERE m.merchant.userId = :userId " +
+           "ORDER BY m.sentAt DESC")
+    List<Message> findStudioMessages(@Param("userId") Long userId);
+
+    // Profile Inbox: Conversations where current user is involved but NOT as the merchant
+    @Query("SELECT DISTINCT m FROM Message m WHERE (m.sender.userId = :userId OR m.receiver.userId = :userId) " +
+           "AND (m.merchant IS NULL OR m.merchant.userId != :userId) " +
+           "ORDER BY m.sentAt DESC")
+    List<Message> findProfileMessages(@Param("userId") Long userId);
 }

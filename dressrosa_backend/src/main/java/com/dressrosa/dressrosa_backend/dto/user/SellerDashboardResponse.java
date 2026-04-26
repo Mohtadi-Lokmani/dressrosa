@@ -25,8 +25,8 @@ public class SellerDashboardResponse {
     private Long todayMessages;
     
     // Sales stats
-    private BigDecimal totalSales;
-    private BigDecimal currentMonthSales;
+    private Long totalSales;
+    private Long currentMonthSales;
     
     // Order stats
     private Long totalOrders;

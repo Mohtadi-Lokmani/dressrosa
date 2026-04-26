@@ -9,6 +9,7 @@ public class SellerProfileDTO {
     private Long userId;
     private String userName;
     private String profilePhoto;
+    private String bannerImage;
     private String bio;
     private Boolean verificationBadge;
     private LocalDateTime createdAt;

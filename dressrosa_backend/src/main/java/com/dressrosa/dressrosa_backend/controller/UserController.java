@@ -3,6 +3,7 @@ import com.dressrosa.dressrosa_backend.dto.common.ApiResponse;
 import com.dressrosa.dressrosa_backend.dto.user.*;
 import com.dressrosa.dressrosa_backend.service.UserService;
 import com.dressrosa.dressrosa_backend.util.SecurityUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -84,9 +85,36 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/me/banner")
+    public ResponseEntity<Map<String, String>> uploadBanner(@RequestParam("file") MultipartFile file) throws IOException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        
+        if (file.isEmpty()) throw new RuntimeException("File is empty");
+        
+        String bannerUrl = userService.saveBannerImage(currentUser.getUserId(), file);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("bannerUrl", bannerUrl);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<SellerProfileDTO> getSellerProfile(@PathVariable Long sellerId) {
-        SellerProfileDTO profile = userService.getSellerProfile(sellerId);
+    public ResponseEntity<SellerProfileDTO> getSellerProfile(@PathVariable Long sellerId, HttpServletRequest request) {
+        Long viewerId = null;
+        try {
+            String email = SecurityUtil.getCurrentUserEmail();
+            if (email != null && !email.equals("anonymousUser")) {
+                UserDTO currentUser = userService.getCurrentUser(email);
+                viewerId = currentUser.getUserId();
+            }
+        } catch (Exception e) {
+            // Not logged in or error
+        }
+        
+        String ipAddress = request.getRemoteAddr();
+        
+        SellerProfileDTO profile = userService.getSellerProfile(sellerId, viewerId, ipAddress);
         return ResponseEntity.ok(profile);
     }
 
@@ -106,5 +134,14 @@ public class UserController {
         UserDTO currentUser = userService.getCurrentUser(email);
         BuyerDashboardResponse dashboard = userService.getBuyerDashboard(currentUser.getUserId());
         return ResponseEntity.ok(dashboard);
+    }
+
+    @GetMapping("/studio/todo")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<StudioTodoResponse> getStudioTodo() {
+        String email = SecurityUtil.getCurrentUserEmail();
+        UserDTO currentUser = userService.getCurrentUser(email);
+        StudioTodoResponse todo = userService.getStudioTodo(currentUser.getUserId());
+        return ResponseEntity.ok(todo);
     }
 }

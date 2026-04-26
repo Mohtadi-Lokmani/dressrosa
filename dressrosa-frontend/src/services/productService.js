@@ -99,6 +99,13 @@ export const productService = {
     });
     return response.data; // { url: '...' }
   },
+  /**
+   * Toggle product boost status (seller only)
+   */
+  toggleBoost: async (productId) => {
+    const response = await api.post(ENDPOINTS.PRODUCTS.BOOST(productId));
+    return response.data;
+  },
 };
 
 export default productService;

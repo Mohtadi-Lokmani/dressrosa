@@ -2,6 +2,7 @@ package com.dressrosa.dressrosa_backend.controller;
 import com.dressrosa.dressrosa_backend.dto.common.ApiResponse;
 import com.dressrosa.dressrosa_backend.dto.social.NotificationResponse;
 import com.dressrosa.dressrosa_backend.dto.user.UserDTO;
+import com.dressrosa.dressrosa_backend.model.NotificationAudience;
 import com.dressrosa.dressrosa_backend.model.NotificationType;
 import com.dressrosa.dressrosa_backend.service.NotificationService;
 import com.dressrosa.dressrosa_backend.service.UserService;
@@ -29,6 +30,7 @@ public class NotificationController {
     
     @GetMapping
     public ResponseEntity<Page<NotificationResponse>> getNotifications(
+            @RequestParam(required = false) NotificationAudience audience,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -36,15 +38,20 @@ public class NotificationController {
         UserDTO currentUser = userService.getCurrentUser(email);
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<NotificationResponse> notifications = notificationService.getUserNotifications(
-            currentUser.getUserId(), pageable
-        );
+        
+        Page<NotificationResponse> notifications;
+        if (audience != null) {
+            notifications = notificationService.getAudienceNotifications(currentUser.getUserId(), audience, pageable);
+        } else {
+            notifications = notificationService.getUserNotifications(currentUser.getUserId(), pageable);
+        }
         
         return ResponseEntity.ok(notifications);
     }
     
     @GetMapping("/unread")
     public ResponseEntity<Page<NotificationResponse>> getUnreadNotifications(
+            @RequestParam(required = false) NotificationAudience audience,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
@@ -52,9 +59,13 @@ public class NotificationController {
         UserDTO currentUser = userService.getCurrentUser(email);
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<NotificationResponse> notifications = notificationService.getUnreadNotifications(
-            currentUser.getUserId(), pageable
-        );
+        
+        Page<NotificationResponse> notifications;
+        if (audience != null) {
+            notifications = notificationService.getUnreadAudienceNotifications(currentUser.getUserId(), audience, pageable);
+        } else {
+            notifications = notificationService.getUnreadNotifications(currentUser.getUserId(), pageable);
+        }
         
         return ResponseEntity.ok(notifications);
     }
@@ -72,11 +83,16 @@ public class NotificationController {
     }
     
     @GetMapping("/unread/count")
-    public ResponseEntity<Long> getUnreadCount() {
+    public ResponseEntity<Long> getUnreadCount(@RequestParam(required = false) NotificationAudience audience) {
         String email = SecurityUtil.getCurrentUserEmail();
         UserDTO currentUser = userService.getCurrentUser(email);
         
-        long count = notificationService.getUnreadCount(currentUser.getUserId());
+        long count;
+        if (audience != null) {
+            count = notificationService.getUnreadCount(currentUser.getUserId(), audience);
+        } else {
+            count = notificationService.getUnreadCount(currentUser.getUserId());
+        }
         return ResponseEntity.ok(count);
     }
     

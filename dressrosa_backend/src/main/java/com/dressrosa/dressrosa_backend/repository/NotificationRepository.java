@@ -1,6 +1,7 @@
 package com.dressrosa.dressrosa_backend.repository;
 
 import com.dressrosa.dressrosa_backend.model.Notification;
+import com.dressrosa.dressrosa_backend.model.NotificationAudience;
 import com.dressrosa.dressrosa_backend.model.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +21,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserUserIdAndIsReadFalse(Long userId);
     Page<Notification> findByUserUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
     
+    // Find by Audience
+    Page<Notification> findByUserUserIdAndAudienceOrderByCreatedAtDesc(Long userId, NotificationAudience audience, Pageable pageable);
+    Page<Notification> findByUserUserIdAndAudienceAndIsReadFalseOrderByCreatedAtDesc(Long userId, NotificationAudience audience, Pageable pageable);
+    
     // Find notifications by type
     List<Notification> findByUserUserIdAndType(Long userId, NotificationType type);
     
     // Count unread notifications
     long countByUserUserIdAndIsReadFalse(Long userId);
+    long countByUserUserIdAndAudienceAndIsReadFalse(Long userId, NotificationAudience audience);
     
     // Count notifications by type
     long countByUserUserIdAndType(Long userId, NotificationType type);

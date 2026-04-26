@@ -12,4 +12,6 @@ public class MessageRequest {
     
     @NotBlank(message = "Message content is required")
     private String content;
+
+    private Long merchantId; // Optional: specify the seller/shop context of this message
 }

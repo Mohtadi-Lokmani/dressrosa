@@ -47,7 +47,7 @@ const MessagesPage = () => {
   const fetchConversations = async () => {
     try {
       setLoadingConversations(true);
-      const data = await messageService.getConversations();
+      const data = await messageService.getProfileConversations();
       // Normalize data to match frontend expectations (nested otherUser object)
       const normalizedData = (data || []).map(conv => ({
         ...conv,

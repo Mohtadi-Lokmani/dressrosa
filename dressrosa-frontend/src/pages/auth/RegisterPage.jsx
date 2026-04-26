@@ -1,32 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Phone, MapPin } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
 import toast from 'react-hot-toast';
 import { ROLES } from '../../utils/constants';
+import { ShoppingBag, Palette } from 'lucide-react';
+import './authBotanical.css';
+
+const img = (file) => `${import.meta.env.BASE_URL}assets/images/${file}`;
+
+const PASSWORD_RULES_HINT =
+  'Use at least 8 characters with at least one uppercase letter, one lowercase letter, and one number.';
+
+function validatePasswordStrength(password) {
+  if (!password) return 'Password is required.';
+  if (password.length < 8) return 'Password must be at least 8 characters long.';
+  if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter.';
+  if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.';
+  if (!/\d/.test(password)) return 'Password must include at least one number.';
+  return '';
+}
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register, loading } = useAuthStore();
-  
+  const { register, loading, error: authError, clearError } = useAuthStore();
+
   const [formData, setFormData] = useState({
+    role: ROLES.BUYER,
     userName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    shopName: '',
     telephone: '',
     address: '',
-    role: ROLES.BUYER,
+    bio: '',
   });
 
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -35,324 +53,352 @@ const RegisterPage = () => {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.userName) {
-      newErrors.userName = 'Name is required';
-    } else if (formData.userName.length < 2) {
-      newErrors.userName = 'Name must be at least 2 characters';
+    if (!formData.userName.trim()) {
+      newErrors.userName = 'Full name is required.';
     }
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'That does not look like a valid email address. Check the format and try again.';
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
+    const pwMsg = validatePasswordStrength(formData.password);
+    if (pwMsg) newErrors.password = pwMsg;
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Please confirm your password.';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'The passwords you entered do not match.';
     }
 
-    if (!formData.telephone) {
-      newErrors.telephone = 'Phone number is required';
-    }
-
-    if (!formData.address) {
-      newErrors.address = 'Address is required';
+    if (formData.role === ROLES.SELLER) {
+      if (!formData.shopName.trim()) newErrors.shopName = 'Atelier name is required.';
+      if (!formData.telephone.trim()) {
+        newErrors.telephone = 'Contact line is required.';
+      } else if (formData.telephone.replace(/\s/g, '').length < 8) {
+        newErrors.telephone = 'Enter a phone number with at least 8 digits.';
+      }
+      if (!formData.address.trim()) newErrors.address = 'Workshop location is required.';
+      if (!formData.bio.trim()) newErrors.bio = 'Artisan signature is required.';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const mapServerMessageToFields = (message) => {
+    const m = (message || '').toLowerCase();
+    if (m.includes('phone') || m.includes('telephone') || m.includes('contact line')) {
+      setErrors((prev) => ({
+        ...prev,
+        telephone: 'This phone number is already registered. Please use a different number.',
+      }));
+      return;
+    }
+    if (m.includes('email')) {
+      setErrors((prev) => ({
+        ...prev,
+        email: 'This email is already registered. Sign in or use another address.',
+      }));
+      return;
+    }
+    if (m.includes('password')) {
+      setErrors((prev) => ({ ...prev, password: message }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, _form: message || 'Registration could not be completed.' }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearError();
+    setErrors((prev) => ({ ...prev, _form: '' }));
 
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error('Please fix the errors below before continuing.');
+      return;
+    }
 
     try {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...registerData } = formData;
-      await register(registerData);
-      toast.success('Account created successfully!');
+      const { confirmPassword, ...registerPayload } = formData;
+      const payload = {
+        ...registerPayload,
+        userName: formData.userName.trim(),
+        email: formData.email.trim(),
+        shopName: formData.shopName.trim() || undefined,
+        address: formData.address.trim() || undefined,
+        bio: formData.bio.trim() || undefined,
+      };
+      if (formData.role === ROLES.SELLER) {
+        payload.telephone = formData.telephone.trim();
+      } else {
+        delete payload.telephone;
+      }
+      await register(payload);
+      toast.success('Account successfully cultivated!');
       navigate('/');
-    } catch (error) {
-      console.error('Register error:', error);
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      if (typeof msg === 'string' && msg.trim()) {
+        mapServerMessageToFields(msg);
+        toast.error(msg);
+      } else {
+        toast.error('Registration could not be completed. Please try again.');
+      }
     }
   };
 
-  const handleGoogleRegister = () => {
-    toast.info('Google sign up coming soon!');
-  };
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Hero */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-burgundy to-burgundy-dark relative overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        
-        {/* Decorative Elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-20 w-32 h-32 bg-white bg-opacity-10 rounded-full blur-xl"></div>
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
-          <div className="max-w-md text-center">
-            <h1 className="text-5xl font-bold mb-6">Join Dressrosa</h1>
-            <p className="text-lg text-white/90 mb-8">
-              Start your fashion journey today. Create your account and become part of our vibrant community.
-            </p>
-            
-            {/* Features List */}
-            <div className="mt-12 space-y-4 text-left">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-xl">✓</span>
-                </div>
-                <span className="text-white/90">Shop from verified sellers</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-xl">✓</span>
-                </div>
-                <span className="text-white/90">Follow your favorite brands</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-xl">✓</span>
-                </div>
-                <span className="text-white/90">Discover trending styles</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-xl">✓</span>
-                </div>
-                <span className="text-white/90">Secure & easy checkout</span>
-              </div>
-            </div>
-          </div>
+    <div className="auth-botanical-page min-h-screen relative flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="auth-botanical-florals" aria-hidden="true">
+        <img src={img('rose_left_vertical.png')} alt="" className="auth-floral-left-vertical" />
+        <img src={img('vintage_roses_right.png')} alt="" className="auth-floral-right-hanging" />
+        <img src={img('rose_bottom_corner.png')} alt="" className="auth-floral-bottom-corner" />
+      </div>
+
+      <div className="absolute top-0 w-full flex justify-between items-center px-8 py-6 z-20">
+        <Link
+          to="/"
+          className="text-2xl font-serif font-medium text-burgundy italic cursor-pointer relative group"
+        >
+          Dressrosa
+          <div className="absolute bottom-[-2px] left-0 w-0 h-[1px] bg-burgundy transition-all duration-300 group-hover:w-full" />
+        </Link>
+        <div className="flex items-center space-x-2 text-xs">
+          <span className="text-gray-500">Already have an account?</span>
+          <Link to="/login" className="text-burgundy font-bold hover:underline">
+            Sign in
+          </Link>
         </div>
       </div>
 
-      {/* Right Side - Register Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white overflow-y-auto">
-        <div className="w-full max-w-md py-8">
-          {/* Logo for Mobile */}
-          <div className="lg:hidden text-center mb-8">
-            <Link to="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-burgundy rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">D</span>
-              </div>
-              <span className="text-2xl font-bold text-gray-900">Dressrosa</span>
-            </Link>
-          </div>
-
-          {/* Welcome Text */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">CREATE ACCOUNT</h2>
-            <p className="text-gray-600">Sign up to get started</p>
-          </div>
-
-          {/* Register Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Account Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                I want to <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, role: ROLES.BUYER }))}
-                  className={`
-                    px-4 py-3 rounded-lg border-2 font-medium transition-all
-                    ${
-                      formData.role === ROLES.BUYER
-                        ? 'border-burgundy bg-burgundy text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-burgundy'
-                    }
-                  `}
-                >
-                  🛍️ Shop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, role: ROLES.SELLER }))}
-                  className={`
-                    px-4 py-3 rounded-lg border-2 font-medium transition-all
-                    ${
-                      formData.role === ROLES.SELLER
-                        ? 'border-burgundy bg-burgundy text-white'
-                        : 'border-gray-300 text-gray-700 hover:border-burgundy'
-                    }
-                  `}
-                >
-                  🏪 Sell
-                </button>
-              </div>
-            </div>
-
-            {/* Full Name */}
-            <Input
-              label="Full Name"
-              type="text"
-              name="userName"
-              placeholder="Enter your full name"
-              value={formData.userName}
-              onChange={handleChange}
-              error={errors.userName}
-              icon={User}
-              required
-            />
-
-            {/* Email */}
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              icon={Mail}
-              required
-            />
-
-            {/* Password */}
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              icon={Lock}
-              required
-            />
-
-            {/* Confirm Password */}
-            <Input
-              label="Confirm Password"
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={errors.confirmPassword}
-              icon={Lock}
-              required
-            />
-
-            {/* Phone */}
-            <Input
-              label="Phone Number"
-              type="tel"
-              name="telephone"
-              placeholder="+216 12 345 678"
-              value={formData.telephone}
-              onChange={handleChange}
-              error={errors.telephone}
-              icon={Phone}
-              required
-            />
-
-            {/* Address */}
-            <Input
-              label="Address"
-              type="text"
-              name="address"
-              placeholder="Enter your address"
-              value={formData.address}
-              onChange={handleChange}
-              error={errors.address}
-              icon={MapPin}
-              required
-            />
-
-            {/* Register Button */}
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              className="mt-6"
-            >
-              CREATE ACCOUNT
-            </Button>
-
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">OR</span>
-              </div>
-            </div>
-
-            {/* Google Register */}
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              fullWidth
-              onClick={handleGoogleRegister}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Sign up with Google
-            </Button>
-
-            {/* Login Link */}
-            <div className="text-center mt-6">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="font-medium text-burgundy hover:text-burgundy-dark transition-colors"
-                >
-                  Log in
-                </Link>
-              </p>
-            </div>
-          </form>
-
-          {/* Terms & Privacy */}
-          <p className="mt-8 text-center text-xs text-gray-500">
-            By creating an account, you agree to our{' '}
-            <Link to="/terms" className="text-burgundy hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-burgundy hover:underline">
-              Privacy Policy
-            </Link>
-          </p>
+      <div className="relative z-10 w-full max-w-[600px] bg-white rounded-[2rem] shadow-2xl shadow-burgundy/5 p-10 sm:p-14 border border-rose-50/50">
+        <div className="mb-10 text-left">
+          <h2 className="text-4xl font-serif text-gray-900 mb-3 tracking-tight">Join the Garden</h2>
+          <p className="text-gray-500 text-sm font-light">Choose your path within the House of Dressrosa.</p>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4 mb-10">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, role: ROLES.BUYER })}
+              className={`flex flex-col items-center justify-center py-6 px-4 rounded-xl border transition-all duration-300 ${
+                formData.role === ROLES.BUYER
+                  ? 'bg-[#f4d7d7] border-[#f4d7d7] shadow-sm'
+                  : 'bg-[#fdfaf9] border-gray-100 hover:border-gray-200 hover:bg-white'
+              }`}
+            >
+              <ShoppingBag
+                className={`w-5 h-5 mb-3 ${formData.role === ROLES.BUYER ? 'text-burgundy' : 'text-gray-400'}`}
+              />
+              <span
+                className={`font-serif italic text-lg ${formData.role === ROLES.BUYER ? 'text-burgundy' : 'text-gray-600'}`}
+              >
+                The Collector
+              </span>
+              <span
+                className={`text-[10px] mt-1 ${formData.role === ROLES.BUYER ? 'text-burgundy/70' : 'text-gray-400'}`}
+              >
+                Explore and collect fashion
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, role: ROLES.SELLER })}
+              className={`flex flex-col items-center justify-center py-6 px-4 rounded-xl border transition-all duration-300 ${
+                formData.role === ROLES.SELLER
+                  ? 'bg-[#f4eed7] border-[#f4eed7] shadow-sm'
+                  : 'bg-[#fdfaf9] border-gray-100 hover:border-gray-200 hover:bg-white'
+              }`}
+            >
+              <Palette
+                className={`w-5 h-5 mb-3 ${formData.role === ROLES.SELLER ? 'text-green-800' : 'text-gray-400'}`}
+              />
+              <span
+                className={`font-serif italic text-lg ${formData.role === ROLES.SELLER ? 'text-green-800' : 'text-gray-600'}`}
+              >
+                The Artisan
+              </span>
+              <span
+                className={`text-[10px] mt-1 ${formData.role === ROLES.SELLER ? 'text-green-800/70' : 'text-gray-400'}`}
+              >
+                Create and sell fashion
+              </span>
+            </button>
+          </div>
+
+          {(authError || errors._form) && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm mb-4 border border-red-100">
+              {errors._form || authError}
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <div className="flex flex-col">
+              <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">
+                Full NAME
+              </label>
+              <input
+                type="text"
+                name="userName"
+                placeholder="Enter your full name"
+                value={formData.userName}
+                onChange={handleChange}
+                autoComplete="name"
+                className={`border-b ${errors.userName ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              {errors.userName && <span className="text-[10px] text-red-500 mt-1.5">{errors.userName}</span>}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">EMAIL</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="your@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                autoComplete="email"
+                className={`border-b ${errors.email ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              {errors.email && <span className="text-[10px] text-red-500 mt-1.5">{errors.email}</span>}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">Password</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="********"
+                value={formData.password}
+                onChange={handleChange}
+                autoComplete="new-password"
+                className={`border-b ${errors.password ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              <p className="text-[10px] text-[#b49891]/90 mt-2 leading-relaxed">{PASSWORD_RULES_HINT}</p>
+              {errors.password && <span className="text-[10px] text-red-500 mt-1.5">{errors.password}</span>}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">
+                Confirm Cipher Key
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="********"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                autoComplete="new-password"
+                className={`border-b ${errors.confirmPassword ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+              />
+              {errors.confirmPassword && (
+                <span className="text-[10px] text-red-500 mt-1.5">{errors.confirmPassword}</span>
+              )}
+            </div>
+          </div>
+
+          {formData.role === ROLES.SELLER && (
+            <div className="pt-8 mt-8 border-t border-rose-50 space-y-6 animate-fade-in">
+              <div className="flex flex-col">
+                <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">
+                  Atelier Name
+                </label>
+                <input
+                  type="text"
+                  name="shopName"
+                  placeholder="Your brand name"
+                  value={formData.shopName}
+                  onChange={handleChange}
+                  className={`border-b ${errors.shopName ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+                />
+                {errors.shopName && <span className="text-[10px] text-red-500 mt-1.5">{errors.shopName}</span>}
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-1">
+                  Contact Line
+                </label>
+                <span className="text-[10px] text-[#b49891]/80 mb-2">Needed for delivery</span>
+                <input
+                  type="tel"
+                  name="telephone"
+                  placeholder=""
+                  value={formData.telephone}
+                  onChange={handleChange}
+                  autoComplete="tel"
+                  className={`border-b ${errors.telephone ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+                />
+                {errors.telephone && <span className="text-[10px] text-red-500 mt-1.5">{errors.telephone}</span>}
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-1">
+                  Workshop Location
+                </label>
+                <span className="text-[10px] text-[#b49891]/80 mb-2">Needed for logistics</span>
+                <input
+                  type="text"
+                  name="address"
+                  placeholder=""
+                  value={formData.address}
+                  onChange={handleChange}
+                  autoComplete="street-address"
+                  className={`border-b ${errors.address ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+                />
+                {errors.address && <span className="text-[10px] text-red-500 mt-1.5">{errors.address}</span>}
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-[9px] uppercase font-bold text-[#b49891] tracking-[0.15em] mb-3">
+                  Artisan Signature
+                </label>
+                <input
+                  type="text"
+                  name="bio"
+                  placeholder="Describe your style in a few words"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className={`border-b ${errors.bio ? 'border-red-400' : 'border-rose-100'} pb-2 focus:outline-none focus:border-burgundy text-gray-800 bg-transparent text-sm placeholder:text-rose-200/90 transition-colors duration-300`}
+                />
+                {errors.bio && <span className="text-[10px] text-red-500 mt-1.5">{errors.bio}</span>}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#6a0d24] text-white font-bold tracking-[0.2em] text-[11px] uppercase py-4 rounded-full mt-10 hover:bg-[#800020] transition-colors shadow-xl shadow-burgundy/20 active:scale-[0.99] disabled:opacity-70 flex justify-center items-center space-x-2"
+          >
+            <span>{loading ? 'Cultivating...' : 'CULTIVATE ACCOUNT'}</span>
+            {!loading && <span className="font-serif italic text-sm ml-1">⚘</span>}
+          </button>
+
+          <div className="mt-10 text-center relative pt-8">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-rose-100" />
+            <p className="text-[9px] uppercase tracking-[0.15em] text-[#b49891] font-bold mb-5 bg-white inline-block px-4 relative -top-[45px]">
+              Or authenticate via
+            </p>
+            <div className="flex justify-center space-x-4 -mt-6">
+              <button
+                type="button"
+                className="w-12 h-12 bg-[#fdfaf9] rounded-full border border-rose-50 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
+              >
+                <span className="font-serif font-bold text-gray-800 text-lg">G</span>
+              </button>
+              <button
+                type="button"
+                className="w-12 h-12 bg-[#fdfaf9] rounded-full border border-rose-50 flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
+              >
+                <span className="font-serif font-bold text-gray-800 text-lg">A</span>
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );
