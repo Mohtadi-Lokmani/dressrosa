@@ -14,6 +14,8 @@ public class OrderResponse {
     private BigDecimal totalAmount;
     private String shippingAddress;
     private LocalDateTime orderDate;
+    private String paymentMethod;
+    private String paymentStatus;
 
     private Long sellerId;
     private String sellerName;

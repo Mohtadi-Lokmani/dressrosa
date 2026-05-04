@@ -83,6 +83,17 @@ public class OrderService {
             order.setShippingAddress(request.getShippingAddress());
             order.setStatus(OrderStatus.PENDING);
             
+            // Set payment info
+            if (request.getPaymentMethod() != null) {
+                order.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
+            }
+            
+            if (order.getPaymentMethod() == PaymentMethod.BANK_CARD) {
+                order.setPaymentStatus(PaymentStatus.PENDING);
+            } else {
+                order.setPaymentStatus(PaymentStatus.UNPAID);
+            }
+            
             Order savedOrder = orderRepository.save(order);
             
             // Create order details and deduct stock
@@ -311,6 +322,8 @@ public class OrderService {
         response.setTotalAmount(order.getTotalAmount());
         response.setShippingAddress(order.getShippingAddress());
         response.setOrderDate(order.getOrderDate());
+        response.setPaymentMethod(order.getPaymentMethod().name());
+        response.setPaymentStatus(order.getPaymentStatus().name());
         
         // Seller info
         response.setSellerId(order.getSeller().getUserId());
@@ -355,6 +368,10 @@ public class OrderService {
                 response.setFirstProductImage(media.get(0).getUrl());
             }
         }
+
+        // Payment info
+        response.setPaymentMethod(order.getPaymentMethod().name());
+        response.setPaymentStatus(order.getPaymentStatus().name());
         
         return response;
     }

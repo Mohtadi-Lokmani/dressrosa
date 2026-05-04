@@ -33,7 +33,6 @@ const Navbar = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.dropdown-container')) {
@@ -76,32 +75,32 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-20 right-0 h-16 bg-white border-b border-gray-200 z-40 flex items-center px-6">
-      {/* Search Bar */}
+    <nav className="fixed top-0 left-64 right-0 h-16 bg-white border-b border-gray-100/50 z-40 flex items-center px-8">
+      {/* Search Bar - Wider and closer to sidebar */}
       <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-burgundy transition-colors" />
           <input
             type="text"
-            placeholder="Search products, sellers..."
+            placeholder="Search products, sellers, ateliers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-burgundy focus:border-transparent focus:bg-white transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-full focus:outline-none focus:ring-2 focus:ring-burgundy/5 focus:border-burgundy/10 focus:bg-white transition-all text-sm font-medium"
           />
         </div>
       </form>
 
-      {/* Right Side Icons */}
-      <div className="flex items-center space-x-2 ml-6">
-        {/* Cart Dropdown */}
+      {/* Right Side Icons - Tighter spacing */}
+      <div className="flex items-center space-x-1.5 ml-auto">
+        {/* Cart */}
         <div className="dropdown-container relative">
           <button
             onClick={() => toggleDropdown('cart')}
-            className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
+            className="relative p-2 rounded-xl hover:bg-gray-50 transition-all group"
           >
-            <ShoppingCart className="w-6 h-6 text-gray-700" />
+            <ShoppingCart className="w-[22px] h-[22px] text-gray-600 group-hover:text-burgundy transition-colors" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-burgundy text-white text-xs rounded-full flex items-center justify-center font-medium">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-burgundy text-white text-[9px] rounded-full flex items-center justify-center font-black">
                 {itemCount > 9 ? '9+' : itemCount}
               </span>
             )}
@@ -109,54 +108,39 @@ const Navbar = () => {
           {openDropdown === 'cart' && <CartDropdown onClose={() => setOpenDropdown(null)} />}
         </div>
 
-        {/* Messages Dropdown */}
-        <div className="dropdown-container relative">
-          <button
-            onClick={() => toggleDropdown('messages')}
-            className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <MessageCircle className="w-6 h-6 text-gray-700" />
-            {unreadMessageCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-              </span>
-            )}
+        {/* Messages */}
+        <div className="relative">
+          <button className="p-2 rounded-xl hover:bg-gray-50 transition-all group">
+            <MessageCircle className="w-[22px] h-[22px] text-gray-600 group-hover:text-burgundy transition-colors" />
           </button>
-          {openDropdown === 'messages' && <MessagesDropdown onClose={() => setOpenDropdown(null)} />}
         </div>
 
-        {/* Notifications Dropdown */}
+        {/* Notifications */}
         <div className="dropdown-container relative">
           <button
             onClick={() => toggleDropdown('notifications')}
-            className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors"
+            className="relative p-2 rounded-xl hover:bg-gray-50 transition-all group"
           >
-            <Bell className="w-6 h-6 text-gray-700" />
+            <Bell className="w-[22px] h-[22px] text-gray-600 group-hover:text-burgundy transition-colors" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
-              </span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-burgundy rounded-full border-2 border-white"></span>
             )}
           </button>
           {openDropdown === 'notifications' && <NotificationsDropdown onClose={() => setOpenDropdown(null)} />}
         </div>
 
-        {/* Profile Dropdown */}
-        <div className="dropdown-container relative">
+        {/* User Profile */}
+        <div className="dropdown-container relative ml-1">
           <button
             onClick={() => toggleDropdown('profile')}
-            className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            className="flex items-center space-x-1.5 p-1 rounded-xl hover:bg-gray-50 transition-all"
           >
-            <div className="w-9 h-9 bg-gradient-to-br from-burgundy to-burgundy-light rounded-full flex items-center justify-center">
-              {user?.userName ? (
-                <span className="text-white font-semibold text-sm">
-                  {user.userName.charAt(0).toUpperCase()}
-                </span>
-              ) : (
-                <User className="w-5 h-5 text-white" />
-              )}
+            <div className="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+              <span className="text-white font-black text-xs">
+                {user?.userName?.charAt(0).toUpperCase() || 'D'}
+              </span>
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-600" />
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
           </button>
           {openDropdown === 'profile' && <ProfileDropdown onClose={() => setOpenDropdown(null)} />}
         </div>

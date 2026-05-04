@@ -5,10 +5,12 @@ import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import FeedContainer from '../../components/feed/FeedContainer';
 import Container from '../../components/layout/Container';
 import toast from 'react-hot-toast';
+import { Star, Users, Zap, Clock, Filter } from 'lucide-react';
 
 import HomeAside from '../../components/feed/HomeAside';
 
 const HomePage = () => {
+  const [activeTab, setActiveTab] = useState('for-you');
   const [filters] = useState({
     status: 'IN_STOCK',
     sort: 'createdAt,desc',
@@ -37,17 +39,42 @@ const HomePage = () => {
     }
   };
 
+  const tabs = [
+    { id: 'for-you', label: 'For You', icon: Star },
+    { id: 'following', label: 'Following', icon: Users },
+    { id: 'new', label: 'New', icon: Clock },
+    { id: 'popular', label: 'Popular', icon: Zap },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#F0F2F5]">
-      <Container className="py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div className="min-h-screen bg-[#F8F9FB]">
+      <Container className="py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Feed Area */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="mb-8">
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Home Feed</h1>
-              <p className="text-gray-500 text-sm mt-1 font-medium">
-                Discover the latest masterpieces from your favorite ateliers
-              </p>
+            
+            {/* Filter Tabs - Directly at the top as requested */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center bg-white p-1 rounded-2xl shadow-sm border border-gray-100/50">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 ${
+                      activeTab === tab.id
+                        ? 'bg-[#FDF4F6] text-burgundy shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'fill-burgundy' : ''}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <button className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100/50 hover:bg-gray-50 transition-colors group">
+                <Filter className="w-5 h-5 text-gray-400 group-hover:text-burgundy transition-colors" />
+              </button>
             </div>
 
             <FeedContainer

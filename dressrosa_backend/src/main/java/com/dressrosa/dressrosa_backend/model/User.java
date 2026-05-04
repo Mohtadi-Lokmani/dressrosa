@@ -42,6 +42,9 @@ public class User {
     
     @Column(columnDefinition = "TEXT")
     private String address;
+
+    @Column(length = 100)
+    private String city;
     
     @Column(nullable = false, length = 255)
     private String password;

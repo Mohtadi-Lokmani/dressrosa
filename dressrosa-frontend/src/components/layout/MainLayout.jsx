@@ -10,7 +10,7 @@ const MainLayout = () => {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="pl-20">
+      <div className="pl-64">
         {/* Navbar */}
         <Navbar />
 

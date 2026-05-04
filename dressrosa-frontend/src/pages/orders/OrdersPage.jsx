@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ChevronRight, Filter } from 'lucide-react';
+import { Package, ChevronRight, Filter, CreditCard, Banknote } from 'lucide-react';
 import { orderService } from '../../services/orderService';
 import Container from '../../components/layout/Container';
 import Badge from '../../components/common/Badge';
@@ -136,6 +136,18 @@ const OrdersPage = () => {
                         <Badge variant={getStatusBadgeVariant(order.status)}>
                           {order.status.replace('_', ' ')}
                         </Badge>
+                        {/* Payment status chip */}
+                        {order.paymentStatus && (
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${
+                            order.paymentStatus === 'PAID'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : order.paymentStatus === 'PENDING'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-amber-50 text-amber-700'
+                          }`}>
+                            {order.paymentMethod === 'BANK_CARD' ? '💳' : '💵'} {order.paymentStatus}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-600">
                         Placed on {formatDate(order.orderDate)}

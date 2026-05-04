@@ -20,4 +20,8 @@ public class OrderListResponse {
     // Quick summary
     private Integer itemsCount;
     private String firstProductImage;
+
+    // Payment info
+    private String paymentMethod;
+    private String paymentStatus;
 }

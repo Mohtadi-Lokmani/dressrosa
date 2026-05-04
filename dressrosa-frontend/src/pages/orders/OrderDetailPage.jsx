@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, Calendar, CreditCard, X } from 'lucide-react';
+import { ArrowLeft, Package, MapPin, Calendar, CreditCard, Banknote, X, Lock } from 'lucide-react';
 import { orderService } from '../../services/orderService';
+import { paymentService } from '../../services/paymentService';
 import Container from '../../components/layout/Container';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Loading from '../../components/common/Loading';
 import Modal from '../../components/common/Modal';
+import PaymentModal from '../../components/checkout/PaymentModal';
 import { formatPrice, formatDate, getStatusColor } from '../../utils/formatters';
 import { ORDER_STATUS } from '../../utils/constants';
 import toast from 'react-hot-toast';
@@ -18,6 +20,7 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -220,9 +223,38 @@ const OrderDetailPage = () => {
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <CreditCard className="w-5 h-5 text-burgundy" />
-                <h3 className="font-semibold text-gray-900">Payment Method</h3>
+                <h3 className="font-semibold text-gray-900">Payment</h3>
               </div>
-              <p className="text-gray-600 text-sm">Cash on Delivery</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {order.paymentMethod === 'BANK_CARD'
+                    ? <CreditCard className="w-4 h-4 text-gray-400" />
+                    : <Banknote className="w-4 h-4 text-gray-400" />}
+                  <p className="text-gray-700 text-sm font-medium">
+                    {order.paymentMethod === 'BANK_CARD' ? 'Bank Card' : 'Cash on Delivery'}
+                  </p>
+                </div>
+                {/* Payment status badge */}
+                {order.paymentStatus && (
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${
+                    order.paymentStatus === 'PAID'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : order.paymentStatus === 'PENDING'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}>{order.paymentStatus}</span>
+                )}
+              </div>
+              {/* Retry payment button for unpaid card orders */}
+              {order.paymentMethod === 'BANK_CARD' && order.paymentStatus !== 'PAID' && order.status !== 'CANCELLED' && (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="mt-4 w-full flex items-center justify-center space-x-2 py-3 bg-burgundy text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-burgundy-dark transition-all"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Complete Payment</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -254,6 +286,14 @@ const OrderDetailPage = () => {
             </div>
           </div>
         </Modal>
+
+        {showPaymentModal && order && (
+          <PaymentModal
+            order={order}
+            onPaymentSuccess={() => { setShowPaymentModal(false); fetchOrder(); toast.success('Payment confirmed!'); }}
+            onClose={() => setShowPaymentModal(false)}
+          />
+        )}
       </Container>
     </div>
   );

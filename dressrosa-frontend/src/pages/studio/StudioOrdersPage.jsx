@@ -185,9 +185,9 @@ const StudioOrdersPage = () => {
           ) : (
             <>
               {/* Table Head */}
-              <div className="grid grid-cols-[1fr_8rem_5rem_5rem_7rem_7rem] gap-4 px-6 py-3 border-b border-gray-50 bg-gray-50/50">
-                {['Order / Customer', 'Date', 'Items', 'Total', 'Status', 'Action'].map((h, i) => (
-                  <p key={h} className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === 5 ? 'text-right' : ''}`}>{h}</p>
+              <div className="grid grid-cols-[1fr_8rem_5rem_5rem_6rem_6rem_7rem] gap-4 px-6 py-3 border-b border-gray-50 bg-gray-50/50">
+                {['Order / Customer', 'Date', 'Items', 'Total', 'Payment', 'Status', 'Action'].map((h, i) => (
+                  <p key={h} className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`}>{h}</p>
                 ))}
               </div>
 
@@ -197,7 +197,7 @@ const StudioOrdersPage = () => {
                   return (
                     <div
                       key={order.orderId}
-                      className="grid grid-cols-[1fr_8rem_5rem_5rem_7rem_7rem] gap-4 items-center px-6 py-4 hover:bg-gray-50/50 transition-colors"
+                      className="grid grid-cols-[1fr_8rem_5rem_5rem_6rem_6rem_7rem] gap-4 items-center px-6 py-4 hover:bg-gray-50/50 transition-colors"
                     >
                       {/* Order / Customer */}
                       <div>
@@ -219,6 +219,20 @@ const StudioOrdersPage = () => {
 
                       {/* Total */}
                       <p className="text-sm font-black text-gray-900">{formatPrice(order.totalAmount)}</p>
+
+                      {/* Payment */}
+                      <div>
+                        <span className={`inline-flex items-center space-x-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${
+                          order.paymentStatus === 'PAID'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : order.paymentStatus === 'PENDING'
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'bg-amber-50 text-amber-700'
+                        }`}>
+                          <span>{order.paymentMethod === 'BANK_CARD' ? '💳' : '💵'}</span>
+                          <span>{order.paymentStatus || 'UNPAID'}</span>
+                        </span>
+                      </div>
 
                       {/* Status */}
                       <StatusBadge status={order.status} />

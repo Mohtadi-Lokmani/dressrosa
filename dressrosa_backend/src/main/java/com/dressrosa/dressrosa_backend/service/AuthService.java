@@ -38,8 +38,8 @@ public class AuthService {
             if (request.getTelephone() == null || request.getTelephone().isBlank()) {
                 throw new RuntimeException("Contact line (phone) is required for artisans.");
             }
-            if (request.getAddress() == null || request.getAddress().isBlank()) {
-                throw new RuntimeException("Workshop location is required for artisans.");
+            if (request.getCity() == null || request.getCity().isBlank()) {
+                throw new RuntimeException("City is required for artisans.");
             }
             if (request.getBio() == null || request.getBio().isBlank()) {
                 throw new RuntimeException("Artisan signature (bio) is required for artisans.");
@@ -66,6 +66,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));  // Encrypt password
         user.setTelephone(telephone.isEmpty() ? null : telephone);
         user.setAddress(trimToNull(request.getAddress()));
+        user.setCity(trimToNull(request.getCity()));
         user.setShopName(trimToNull(request.getShopName()));
         user.setBio(trimToNull(request.getBio()));
         user.setRole(request.getRole());

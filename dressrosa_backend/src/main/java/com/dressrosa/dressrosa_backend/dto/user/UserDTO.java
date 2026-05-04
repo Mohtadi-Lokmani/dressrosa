@@ -15,6 +15,7 @@ public class UserDTO {
     private String profilePhoto;
     private String bannerImage;
     private String bio;
+    private String city;
     private Role role;
     private Boolean isVerified;
     private Boolean verificationBadge;

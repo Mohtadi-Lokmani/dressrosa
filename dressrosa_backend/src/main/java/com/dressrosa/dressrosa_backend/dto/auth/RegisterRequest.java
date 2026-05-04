@@ -29,5 +29,6 @@ public class RegisterRequest {
     private String address;
     private String shopName;
     private String bio;
+    private String city;
     private Role role = Role.BUYER;  
 }
