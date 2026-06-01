@@ -71,6 +71,7 @@ const OrderDetailPage = () => {
 
   const canCancel = order.status === ORDER_STATUS.PENDING || order.status === ORDER_STATUS.PROCESSING;
   const statusColor = getStatusColor(order.status);
+  const orderItems = order.items || order.orderItems || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -119,38 +120,38 @@ const OrderDetailPage = () => {
             <div className="bg-white rounded-xl p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
               <div className="space-y-4">
-                {order.orderItems?.map((item) => (
+                {orderItems.map((item) => (
                   <div
-                    key={item.orderItemId}
+                    key={item.detailId || `${item.productId}-${item.variantId || 'no-variant'}`}
                     className="flex items-start space-x-4 pb-4 border-b border-gray-200 last:border-0"
                   >
                     <Link
-                      to={`/products/${item.product?.productId}`}
+                      to={`/products/${item.productId || item.product?.productId}`}
                       className="flex-shrink-0"
                     >
                       <img
-                        src={item.product?.media?.[0]?.url || 'https://via.placeholder.com/80'}
-                        alt={item.product?.title}
+                        src={item.productImage || item.product?.media?.[0]?.url || 'https://via.placeholder.com/80'}
+                        alt={item.productTitle || item.product?.title}
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                     </Link>
                     <div className="flex-1">
                       <Link
-                        to={`/products/${item.product?.productId}`}
+                        to={`/products/${item.productId || item.product?.productId}`}
                         className="block"
                       >
                         <h3 className="font-medium text-gray-900 hover:text-burgundy transition-colors">
-                          {item.product?.title}
+                          {item.productTitle || item.product?.title}
                         </h3>
                       </Link>
                       <p className="text-sm text-gray-600 mt-1">
-                        Seller: {item.product?.seller?.userName}
+                        Seller: {order.sellerName || 'Seller'}
                       </p>
-                      {item.variant && (
+                      {(item.variant || item.size || item.color) && (
                         <p className="text-sm text-gray-500 mt-1">
-                          {item.variant.size && `Size: ${item.variant.size}`}
-                          {item.variant.size && item.variant.color && ' • '}
-                          {item.variant.color && `Color: ${item.variant.color}`}
+                          {(item.size || item.variant?.size) && `Size: ${item.size || item.variant?.size}`}
+                          {(item.size || item.variant?.size) && (item.color || item.variant?.color) && ' • '}
+                          {(item.color || item.variant?.color) && `Color: ${item.color || item.variant?.color}`}
                         </p>
                       )}
                       <p className="text-sm text-gray-600 mt-1">
@@ -159,10 +160,7 @@ const OrderDetailPage = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
-                        {formatPrice(item.price * item.quantity)}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formatPrice(item.price)} each
+                        {formatPrice(item.totalPrice || ((item.price || 0) * (item.quantity || 0)))}
                       </p>
                     </div>
                   </div>

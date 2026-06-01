@@ -350,6 +350,11 @@ public class OrderService {
         response.setStatus(order.getStatus());
         response.setTotalAmount(order.getTotalAmount());
         response.setOrderDate(order.getOrderDate());
+        response.setShippingAddress(order.getShippingAddress());
+        response.setBuyerId(order.getBuyer().getUserId());
+        response.setBuyerName(order.getBuyer().getUserName());
+        response.setSellerId(order.getSeller().getUserId());
+        response.setSellerName(order.getSeller().getUserName());
         
         // Show seller for buyer view, buyer for seller view
         response.setOtherUserId(order.getSeller().getUserId());
@@ -358,6 +363,9 @@ public class OrderService {
         // Items count
         List<OrderDetail> details = orderDetailRepository.findByOrderOrderId(order.getOrderId());
         response.setItemsCount(details.size());
+        response.setItems(details.stream()
+            .map(this::convertDetailToResponse)
+            .collect(Collectors.toList()));
         
         // First product image
         if (!details.isEmpty()) {

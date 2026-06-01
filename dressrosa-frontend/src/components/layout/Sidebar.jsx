@@ -93,14 +93,7 @@ const Sidebar = () => {
 
       {/* Bottom Actions & Decor */}
       <div className="relative p-4 mt-auto">
-        {/* The Rose Decor - Positioned subtly at the bottom left */}
-        <div className="absolute bottom-0 left-0 w-32 h-32 opacity-20 pointer-events-none select-none -translate-x-4 translate-y-4">
-          <img 
-            src="/src/assets/images/rose-sidebar.png" 
-            alt="Botanical Rose" 
-            className="w-full h-full object-contain filter grayscale brightness-125 hover:grayscale-0 transition-all duration-700"
-          />
-        </div>
+        
 
         {/* Action Buttons */}
         <div className="relative z-10 space-y-1 mb-6 px-2">

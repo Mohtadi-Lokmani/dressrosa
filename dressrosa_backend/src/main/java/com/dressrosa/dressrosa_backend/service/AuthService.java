@@ -1,18 +1,26 @@
 package com.dressrosa.dressrosa_backend.service;
 
 import com.dressrosa.dressrosa_backend.dto.auth.AuthResponse;
+import com.dressrosa.dressrosa_backend.dto.auth.GoogleLoginRequest;
 import com.dressrosa.dressrosa_backend.dto.auth.LoginRequest;
 import com.dressrosa.dressrosa_backend.dto.auth.RegisterRequest;
 import com.dressrosa.dressrosa_backend.model.Role;
 import com.dressrosa.dressrosa_backend.model.User;
 import com.dressrosa.dressrosa_backend.repository.UserRepository;
 import com.dressrosa.dressrosa_backend.security.JwtUtil;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -113,6 +121,96 @@ public class AuthService {
             user.getEmail(),
             user.getRole()
         );
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${google.client.id:}")
+    private String googleClientId;
+
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        try {
+            GoogleIdTokenVerifier verifier = 
+                new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), 
+                    new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+            GoogleIdToken idToken = verifier.verify(request.getIdToken());
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+
+                String email = payload.getEmail();
+                String name = (String) payload.get("name");
+                
+                // Check if user exists
+                User user = userRepository.findByEmail(email).orElseGet(() -> {
+                    // Create new user if not exists
+                    User newUser = new User();
+                    newUser.setEmail(email);
+                    newUser.setUserName(name);
+                    newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString())); // Random password
+                    
+                    // Set role from request or default to BUYER
+                    Role role = Role.BUYER;
+                    if (request.getRole() != null) {
+                        try {
+                            role = Role.valueOf(request.getRole().toUpperCase());
+                        } catch (Exception e) {
+                            // default to buyer
+                        }
+                    }
+                    newUser.setRole(role);
+
+                    // Set extra fields for Sellers or just general profile info
+                    if (role == Role.SELLER) {
+                        newUser.setShopName(request.getShopName());
+                        newUser.setCity(request.getCity());
+                        newUser.setBio(request.getBio());
+                    }
+                    newUser.setTelephone(request.getTelephone());
+
+                    newUser.setIsVerified(true); // Google emails are verified
+                    newUser.setVerificationBadge(false);
+                    return userRepository.save(newUser);
+                });
+
+                // Generate JWT token
+                String token = jwtUtil.generateToken(user.getEmail());
+
+                return new AuthResponse(
+                    token,
+                    user.getUserId(),
+                    user.getUserName(),
+                    user.getEmail(),
+                    user.getRole()
+                );
+            } else {
+                throw new RuntimeException("Invalid Google ID token");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Google authentication failed: " + e.getMessage());
+        }
+    }
+
+    public boolean checkGoogleUserExists(String idTokenString) {
+        try {
+            GoogleIdTokenVerifier verifier = 
+                new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), 
+                    new GsonFactory())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                return userRepository.existsByEmail(email);
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static String trimToNull(String value) {

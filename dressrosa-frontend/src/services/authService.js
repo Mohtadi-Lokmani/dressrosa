@@ -40,6 +40,39 @@ export const authService = {
   },
 
   /**
+   * Google Login
+   */
+  googleLogin: async (idToken, details = {}) => {
+    try {
+      const response = await api.post(ENDPOINTS.AUTH.GOOGLE_LOGIN, { 
+        idToken, 
+        ...details 
+      });
+      
+      if (response.data.token) {
+        storage.auth.setToken(response.data.token);
+        storage.auth.setUser(response.data);
+      }
+      
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Check if Google user exists
+   */
+  googleCheck: async (idToken) => {
+    try {
+      const response = await api.post(ENDPOINTS.AUTH.GOOGLE_CHECK, { idToken });
+      return response.data.exists;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
    * Logout user
    */
   logout: () => {

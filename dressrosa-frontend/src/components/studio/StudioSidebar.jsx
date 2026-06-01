@@ -20,6 +20,7 @@ const navItems = [
     section: 'MANAGE',
     items: [
       { icon: Package, label: 'Products', path: ROUTES.STUDIO_PRODUCTS },
+      { icon: Package, label: 'Collections', path: ROUTES.STUDIO_COLLECTIONS },
       { icon: ShoppingBag, label: 'Orders', path: ROUTES.STUDIO_ORDERS },
       { icon: Star, label: 'Reviews', path: ROUTES.STUDIO_REVIEWS },
     ],

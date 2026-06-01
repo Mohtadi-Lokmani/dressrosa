@@ -57,6 +57,7 @@ export const ROUTES = {
   // Studio (The new Seller Business Suite)
   STUDIO_HOME: '/studio',
   STUDIO_PRODUCTS: '/studio/products',
+  STUDIO_COLLECTIONS: '/studio/collections',
   STUDIO_PRODUCTS_ADD: '/studio/products/add',
   STUDIO_PRODUCTS_EDIT: '/studio/products/:id/edit',
   STUDIO_ORDERS: '/studio/orders',

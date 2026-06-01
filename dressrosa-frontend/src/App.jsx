@@ -38,6 +38,7 @@ import StudioComingSoon from './pages/studio/StudioComingSoon';
 import StudioProductsPage from './pages/studio/StudioProductsPage';
 import StudioAddProductPage from './pages/studio/StudioAddProductPage';
 import StudioEditProductPage from './pages/studio/StudioEditProductPage';
+import StudioCollectionsPage from './pages/studio/StudioCollectionsPage';
 import StudioOrdersPage from './pages/studio/StudioOrdersPage';
 import StudioAnalyticsPage from './pages/studio/StudioAnalyticsPage';
 import StudioMessagesPage from './pages/studio/StudioMessagesPage';
@@ -180,6 +181,7 @@ function App() {
         >
           <Route index element={<StudioHomePage />} />
           <Route path="products" element={<StudioProductsPage />} />
+          <Route path="collections" element={<StudioCollectionsPage />} />
           <Route path="products/add" element={<StudioAddProductPage />} />
           <Route path="products/:id/edit" element={<StudioEditProductPage />} />
           <Route path="orders" element={<StudioOrdersPage />} />

@@ -38,6 +38,9 @@ public class UserService {
 
     @Autowired
     private ProfileViewRepository profileViewRepository;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -181,7 +184,8 @@ public class UserService {
         dto.setTotalProducts(productRepository.countBySellerUserId(sellerId));
         dto.setFollowersCount(followRepository.countByFollowingUserId(sellerId));
         dto.setFollowingCount(followRepository.countByFollowerUserId(sellerId));
-        dto.setAverageRating(4.5); 
+        dto.setAverageRating(reviewRepository.getAverageRatingForSeller(sellerId));
+        dto.setOrdersCompleted(orderRepository.countBySellerUserIdAndStatus(sellerId, com.dressrosa.dressrosa_backend.model.OrderStatus.DELIVERED));
         
         // Track view
         trackProfileView(seller, viewerId, ipAddress);
@@ -240,7 +244,9 @@ public class UserService {
         
         // Order stats
         dashboard.setTotalOrders(orderRepository.countByBuyerUserId(buyerId));
-       
+        
+        // Activity stats
+        dashboard.setReviewsGiven(reviewRepository.countByUserUserId(buyerId));
         
         return dashboard;
     }

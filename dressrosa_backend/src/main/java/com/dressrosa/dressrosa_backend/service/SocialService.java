@@ -2,6 +2,8 @@ package com.dressrosa.dressrosa_backend.service;
 
 import com.dressrosa.dressrosa_backend.dto.common.ApiResponse;
 import com.dressrosa.dressrosa_backend.dto.product.ProductListResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductVariantResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductMediaDTO;
 import com.dressrosa.dressrosa_backend.dto.social.ReviewRequest;
 import com.dressrosa.dressrosa_backend.dto.social.ReviewResponse;
 import com.dressrosa.dressrosa_backend.dto.user.SellerProfileDTO;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dressrosa.dressrosa_backend.dto.product.ProductMediaDTO;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,9 @@ public class SocialService {
     
     @Autowired
     private ProductMediaRepository productMediaRepository;
+    
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
     
    
     @Transactional
@@ -185,6 +191,11 @@ public class SocialService {
         Page<Review> reviews = reviewRepository.findByProductProductId(productId, pageable);
         return reviews.map(this::convertReviewToResponse);
     }
+
+    public Page<ReviewResponse> getSellerReviews(Long sellerId, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByProductSellerUserId(sellerId, pageable);
+        return reviews.map(this::convertReviewToResponse);
+    }
     
    
     public List<ReviewResponse> getUserReviews(Long userId) {
@@ -294,6 +305,15 @@ public class SocialService {
         return response;
     }
     
+    private ProductVariantResponse convertVariantToResponse(ProductVariant variant) {
+        ProductVariantResponse response = new ProductVariantResponse();
+        response.setVariantId(variant.getVariantId());
+        response.setColor(variant.getColor());
+        response.setSize(variant.getSize());
+        response.setQuantity(variant.getQuantity());
+        return response;
+    }
+
     private SellerProfileDTO convertUserToSellerProfile(User user) {
         SellerProfileDTO dto = new SellerProfileDTO();
         dto.setUserId(user.getUserId());
@@ -322,20 +342,40 @@ public class SocialService {
         response.setIsBoosted(product.getIsBoosted());
         response.setCreatedAt(product.getCreatedAt());
         
-        // First image only
+        // Media
         List<ProductMedia> media = productMediaRepository.findByProductProductId(product.getProductId());
         if (!media.isEmpty()) {
             response.setImageUrl(media.get(0).getUrl());
         }
         
+        // Set unified media list for frontend
+        response.setMedia(media.stream()
+            .map(m -> new ProductMediaDTO(m.getUrl(), m.getType()))
+            .collect(Collectors.toList()));
+        
+        // Category info
+        if (product.getCategory() != null) {
+            response.setCategoryId(product.getCategory().getCategoryId());
+            response.setCategoryName(product.getCategory().getName());
+        }
+
         // Seller
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
         response.setSellerVerified(product.getSeller().getVerificationBadge());
         
+        // Variants (for Move All to Cart functionality)
+        List<ProductVariant> variants = productVariantRepository.findByProductProductId(product.getProductId());
+        response.setVariants(variants.stream()
+            .map(this::convertVariantToResponse)
+            .collect(Collectors.toList()));
+        
         // Quick stats
         response.setLikesCount((long) likeRepository.countByProductProductId(product.getProductId()));
         response.setAverageRating(reviewRepository.getAverageRating(product.getProductId()));
+        
+        // Since we are in Wishlist/Likes, isLiked is likely true
+        response.setIsLiked(true);
         
         return response;
     }

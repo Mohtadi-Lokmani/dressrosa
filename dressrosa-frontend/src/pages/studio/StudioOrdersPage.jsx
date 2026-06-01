@@ -96,7 +96,7 @@ const StudioOrdersPage = () => {
       show: true,
       orderId: order.orderId,
       currentStatus: order.status,
-      buyerName: order.buyer?.userName || 'Buyer',
+      buyerName: order.buyerName || order.otherUserName || order.buyer?.userName || 'Buyer',
     });
     setNewStatus(order.status);
   };
@@ -205,7 +205,7 @@ const StudioOrdersPage = () => {
                           #{order.orderId}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {order.buyer?.userName || '—'}
+                          {order.buyerName || order.otherUserName || '—'}
                         </p>
                       </div>
 
@@ -214,7 +214,7 @@ const StudioOrdersPage = () => {
 
                       {/* Items */}
                       <p className="text-sm text-gray-700 font-semibold">
-                        {order.orderItems?.length || 0} item{(order.orderItems?.length || 0) !== 1 ? 's' : ''}
+                        {order.itemsCount || order.items?.length || order.orderItems?.length || 0} item{(order.itemsCount || order.items?.length || order.orderItems?.length || 0) !== 1 ? 's' : ''}
                       </p>
 
                       {/* Total */}

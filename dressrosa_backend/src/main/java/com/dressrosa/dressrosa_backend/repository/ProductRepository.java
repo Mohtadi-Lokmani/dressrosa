@@ -84,4 +84,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     
     // Get newest products
     Page<Product> findByStatusOrderByCreatedAtDesc(ProductStatus status, Pageable pageable);
+
+    // Find products created within the last week
+    @Query("SELECT p FROM Product p WHERE p.status = :status AND p.createdAt >= :oneWeekAgo")
+    Page<Product> findRecentProducts(
+        @Param("status") ProductStatus status, 
+        @Param("oneWeekAgo") java.time.LocalDateTime oneWeekAgo, 
+        Pageable pageable
+    );
+
+    // Find products ordered by like count
+    @Query("SELECT p FROM Product p " +
+           "WHERE p.status = :status " +
+           "ORDER BY (SELECT COUNT(l) FROM Like l WHERE l.product = p) DESC, p.createdAt DESC")
+    Page<Product> findPopularProducts(@Param("status") ProductStatus status, Pageable pageable);
 }

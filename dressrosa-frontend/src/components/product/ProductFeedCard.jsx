@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Flag, Sparkles, MessageCircle, Star } from 'lucide-react';
+import { Heart, MoreHorizontal, ChevronLeft, ChevronRight, Bookmark, Flag, Sparkles, MessageCircle, Star, Check } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import { formatPrice } from '../../utils/formatters';
@@ -14,7 +14,7 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
   const [isSaved, setIsSaved] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [likingInProgress, setLikingInProgress] = useState(false);
-  const [likeCount, setLikeCount] = useState(product.likeCount || 0);
+  const [likeCount, setLikeCount] = useState(product.likesCount || 0);
   const menuRef = useRef(null);
 
   const images = product.media?.filter(m => m.type === 'IMAGE') || [];
@@ -97,119 +97,136 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative border border-gray-100 max-w-2xl mx-auto">
-      {/* Seller Header */}
-      <div className="p-4 bg-white flex items-center justify-between border-b border-gray-50">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative border border-gray-100 max-w-3xl mx-auto mb-6">
+      {/* Post Header */}
+      <div className="p-5 flex items-center justify-between bg-white relative z-20">
         <Link to={`/seller/${product.sellerId}`} className="flex items-center space-x-3 group">
-          <Avatar src={product.sellerProfileImage || undefined} name={product.sellerName || 'User'} size="sm" />
+          <Avatar src={product.sellerProfileImage || undefined} name={product.sellerName || 'User'} size="md" />
           <div>
-            <p className="font-black text-gray-900 text-[13px] group-hover:text-burgundy transition-colors uppercase tracking-wider">
-              {product.sellerName || 'User'}
-            </p>
-            <p className="text-[11px] text-gray-400 font-bold italic">Fashion Seller • 2h ago</p>
+            <div className="flex items-center space-x-1.5">
+              <p className="font-bold text-gray-900 text-sm group-hover:text-burgundy transition-colors">
+                {product.sellerName || 'User'}
+              </p>
+              {product.sellerVerified !== false && (
+                <div className="w-4 h-4 bg-burgundy rounded-full flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+            </div>
+            <p className="text-[12px] text-gray-500 mt-0.5">2 hours ago • {product.sellerCity || 'Tunis'}</p>
           </div>
         </Link>
-        <div className="relative" ref={menuRef}>
-          <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 hover:bg-gray-50 rounded-full transition-colors text-gray-400">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in">
-              <button onClick={() => { toast.info('Report coming soon'); setShowMenu(false); }} className="w-full flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
-                <Flag className="w-4 h-4 text-gray-400" />
-                <span className="text-sm font-bold text-gray-700">Report</span>
-              </button>
+        <div className="flex items-center space-x-2">
+          {product.isBoosted && (
+            <span className="bg-red-50 text-red-600 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center space-x-1">
+              <Sparkles className="w-3.5 h-3.5 fill-red-600" />
+              <span>Boosted</span>
+            </span>
+          )}
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 hover:bg-gray-50 rounded-full transition-colors text-gray-400">
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in">
+                <button onClick={() => { toast.info('Report coming soon'); setShowMenu(false); }} className="w-full flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+                  <Flag className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-bold text-gray-700">Report</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Post Text Content */}
+      <div className="px-5 pb-4">
+        <Link to={`/products/${product.productId}`} className="block group">
+          <h3 className="font-bold text-gray-900 text-[15px] leading-tight mb-2">
+            {product.title}
+          </h3>
+          <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
+            {product.description}
+          </p>
+          <p className="font-black text-gray-900 text-[15px] mt-3">{formatPrice(product.price)}</p>
+        </Link>
+      </div>
+
+      {/* Image Gallery */}
+      <div className="px-5 pb-4">
+        <Link to={`/products/${product.productId}`} className="block w-full">
+          {images.length === 0 ? (
+            <div className="w-full aspect-[4/3] bg-gray-50 rounded-xl flex items-center justify-center text-gray-300 border border-gray-100">📸</div>
+          ) : images.length === 1 ? (
+            <div className="w-full aspect-video sm:aspect-[16/10] bg-gray-50 rounded-xl overflow-hidden group">
+              <img src={getImageUrl(images[0].url)} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              {images.slice(0, 3).map((image, idx) => (
+                <div key={idx} className="relative aspect-[3/4] bg-gray-50 rounded-xl overflow-hidden group">
+                  <img src={getImageUrl(image.url)} alt={`${product.title} ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  {idx === 2 && images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-white font-black text-lg">+{images.length - 3}</span>
+                    </div>
+                  )}
+                  {idx === 2 && images.length === 3 && (
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                       <ChevronRight className="w-4 h-4 text-gray-800" />
+                     </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Main Image Carousel */}
-      <div className="relative aspect-video lg:aspect-[2/1] bg-gray-50 overflow-hidden group">
-        <Link to={`/products/${product.productId}`} className="block w-full h-full">
-          {images.length > 0 ? (
-            <img src={getImageUrl(images[currentImageIndex]?.url)} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">📸</div>
-          )}
         </Link>
-        
-        {hasMultipleImages && (
-          <>
-            <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md"><ChevronLeft className="w-5 h-5 text-gray-800" /></button>
-            <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md"><ChevronRight className="w-5 h-5 text-gray-800" /></button>
-          </>
-        )}
-
-        {product.isBoosted && (
-          <div className="absolute top-4 left-4 z-10 flex items-center space-x-2 bg-gray-900/80 text-white px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Featured</span>
-          </div>
-        )}
       </div>
 
-      {/* Interactions Area */}
-      <div className="p-4 space-y-4">
-        {/* Like Count - Simplified as requested */}
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center space-x-2">
-            <Heart className={`w-4 h-4 ${isLiked ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-            <span className="text-[13px] font-black text-gray-700 tracking-tight">{likeCount} likes</span>
-          </div>
+      {/* Tags */}
+      {(product.categoryName || product.condition || product.brand) && (
+        <div className="px-5 pb-5 flex flex-wrap gap-2">
+          {product.categoryName && (
+            <span className="bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full text-[11px] font-semibold">{product.categoryName}</span>
+          )}
+          {product.condition && (
+            <span className="bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full text-[11px] font-semibold">{product.condition}</span>
+          )}
+          {product.brand && (
+            <span className="bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full text-[11px] font-semibold">{product.brand}</span>
+          )}
         </div>
+      )}
 
-        <div className="w-full h-[1px] bg-gray-50"></div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-3">
-          <button 
-            onClick={handleLike}
-            disabled={likingInProgress}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-black text-[13px] uppercase tracking-wider transition-all ${
-              isLiked ? 'bg-red-50 text-red-500 shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-            <span>{isLiked ? 'Liked' : 'Like'}</span>
-          </button>
-
-          <button 
-            onClick={handleSave}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-black text-[13px] uppercase tracking-wider transition-all ${
-              isSaved ? 'bg-burgundy/5 text-burgundy shadow-sm' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
+      {/* Footer Actions */}
+      <div className="px-5 py-4 flex items-center justify-between border-t border-gray-50">
+        <div className="flex items-center space-x-6 text-gray-500">
+          <button onClick={handleLike} disabled={likingInProgress} className="flex items-center space-x-2 hover:text-red-500 transition-colors group">
+            <Heart className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'group-hover:text-red-500'}`} />
+            <span className={`text-[13px] font-medium ${isLiked ? 'text-red-500' : ''}`}>{likeCount}</span>
           </button>
           
-          <Link 
-            to={`/products/${product.productId}`}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-gray-800 transition-all shadow-md shadow-gray-200"
-          >
-            Details
+          <Link to={`/products/${product.productId}#comments`} className="flex items-center space-x-2 hover:text-gray-900 transition-colors group">
+            <MessageCircle className="w-5 h-5 group-hover:text-gray-900" />
+            <span className="text-[13px] font-medium">{product.reviewsCount || 0}</span>
           </Link>
-        </div>
 
-        {/* Product Info */}
-        <div className="pt-2">
-          <Link to={`/products/${product.productId}`} className="block group">
-            <h3 className="font-black text-gray-900 text-lg group-hover:text-burgundy transition-colors leading-tight mb-1">
-              {product.title}
-            </h3>
-            <p className="text-[13px] text-gray-500 font-semibold line-clamp-2 leading-relaxed">
-              {product.description}
-            </p>
-          </Link>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-2xl font-black text-burgundy tracking-tighter">{formatPrice(product.price)}</span>
-            <div className="flex items-center space-x-1 bg-yellow-50 px-2 py-1 rounded-lg">
-              <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-              <span className="text-[11px] font-black text-yellow-700">New</span>
-            </div>
-          </div>
+          <button className="flex items-center space-x-2 hover:text-gray-900 transition-colors group">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-gray-900">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+            <span className="text-[13px] font-medium">Share</span>
+          </button>
         </div>
+        
+        <button 
+          onClick={handleSave} 
+          className={`p-2 rounded-full transition-all ${isSaved ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'}`}
+        >
+          <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
+        </button>
       </div>
     </div>
   );

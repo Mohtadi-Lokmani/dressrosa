@@ -135,6 +135,16 @@ public class SocialController {
         Page<ReviewResponse> reviews = socialService.getProductReviews(productId, pageable);
         return ResponseEntity.ok(reviews);
     }
+
+    @GetMapping("/reviews/seller/{sellerId}")
+    public ResponseEntity<Page<ReviewResponse>> getSellerReviews(
+            @PathVariable Long sellerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Page<ReviewResponse> reviews = socialService.getSellerReviews(sellerId, pageable);
+        return ResponseEntity.ok(reviews);
+    }
     
   
     @GetMapping("/reviews/my-reviews")

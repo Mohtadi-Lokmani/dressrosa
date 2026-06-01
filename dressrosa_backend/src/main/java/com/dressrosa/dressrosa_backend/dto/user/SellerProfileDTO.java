@@ -19,4 +19,5 @@ public class SellerProfileDTO {
     private Long followersCount;
     private Long followingCount;
     private Double averageRating;
+    private Long ordersCompleted;
 }

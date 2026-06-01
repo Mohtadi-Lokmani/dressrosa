@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dressrosa.dressrosa_backend.dto.auth.AuthResponse;
 import com.dressrosa.dressrosa_backend.dto.auth.LoginRequest;
 import com.dressrosa.dressrosa_backend.dto.auth.RegisterRequest;
+import com.dressrosa.dressrosa_backend.dto.auth.GoogleLoginRequest;
 import com.dressrosa.dressrosa_backend.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -45,6 +46,27 @@ public class AuthController {
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Incorrect email or password."));
+        }
+    }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        try {
+            AuthResponse response = authService.googleLogin(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/google-check")
+    public ResponseEntity<?> googleCheck(@RequestBody Map<String, String> request) {
+        try {
+            String idToken = request.get("idToken");
+            boolean exists = authService.checkGoogleUserExists(idToken);
+            return ResponseEntity.ok(Map.of("exists", exists));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
 }

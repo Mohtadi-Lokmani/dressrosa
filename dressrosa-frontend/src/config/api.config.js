@@ -9,6 +9,8 @@ export const ENDPOINTS = {
   AUTH: {
     REGISTER: '/api/auth/register',
     LOGIN: '/api/auth/login',
+    GOOGLE_LOGIN: '/api/auth/google-login',
+    GOOGLE_CHECK: '/api/auth/google-check',
   },
   
   // Users
@@ -27,6 +29,7 @@ export const ENDPOINTS = {
   // Products
   PRODUCTS: {
     ALL: '/api/products',
+    FEED: '/api/products/feed',
     BY_ID: (id) => `/api/products/${id}`,
     CREATE: '/api/products',
     UPDATE: (id) => `/api/products/${id}`,
@@ -76,8 +79,19 @@ export const ENDPOINTS = {
     
     REVIEWS: '/api/social/reviews',
     PRODUCT_REVIEWS: (productId) => `/api/social/reviews/product/${productId}`,
+    SELLER_REVIEWS: (sellerId) => `/api/social/reviews/seller/${sellerId}`,
     MY_REVIEWS: '/api/social/reviews/my-reviews',
     DELETE_REVIEW: (id) => `/api/social/reviews/${id}`,
+  },
+
+  // Collections
+  COLLECTIONS: {
+    BY_SELLER: (sellerId) => `/api/collections/seller/${sellerId}`,
+    CREATE: '/api/collections',
+    ITEMS: (collectionId) => `/api/collections/${collectionId}/items`,
+    ADD_ITEM: (collectionId) => `/api/collections/${collectionId}/items`,
+    REMOVE_ITEM: (collectionId, productId) => `/api/collections/${collectionId}/items/${productId}`,
+    DELETE: (collectionId) => `/api/collections/${collectionId}`,
   },
   
   // Messages

@@ -9,7 +9,9 @@ import FeedSkeleton from '../../components/feed/FeedSkeleton';
 import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
 import Button from '../../components/common/Button';
-import { ShoppingBag, SlidersHorizontal } from 'lucide-react';
+import { ShoppingBag, SlidersHorizontal, LayoutGrid, List, X, Leaf, ChevronDown } from 'lucide-react';
+import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
 import { SORT_OPTIONS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'react-router-dom';
@@ -19,6 +21,7 @@ const ShopPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [viewType, setViewType] = useState('grid'); // 'grid' or 'list'
 
   const initialCat = searchParams.get('cat') ? Number(searchParams.get('cat')) : null;
   const initialPage = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
@@ -35,11 +38,13 @@ const ShopPage = () => {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [filters, setFilters] = useState(initialFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialFilters);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const { addItem } = useCartStore();
+  const { user } = useAuthStore();
   const [sortBy, setSortBy] = useState('createdAt,desc');
   const [totalPages, setTotalPages] = useState(0);
 
-  // Sync state when URL params change (e.g. user uses browser back/forward)
+  // Sync state when URL params change
   useEffect(() => {
     setSelectedCategory(searchParams.get('cat') ? Number(searchParams.get('cat')) : null);
     setCurrentPage(searchParams.get('page') ? Number(searchParams.get('page')) : 0);
@@ -54,12 +59,10 @@ const ShopPage = () => {
     setAppliedFilters(updatedFilters);
   }, [searchParams]);
 
-  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Fetch products when applied filters/page/category/sort changes
   useEffect(() => {
     fetchProducts();
   }, [selectedCategory, appliedFilters, currentPage, sortBy]);
@@ -70,74 +73,42 @@ const ShopPage = () => {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories');
     }
   };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      
-      // Build query params
       const params = {
         page: currentPage,
-        size: 18,
+        size: 20, // Increased for better layout
         sort: sortBy,
         status: 'IN_STOCK',
       };
-
-      // Add category filter
-      if (selectedCategory) {
-        params.categoryId = selectedCategory;
-      }
-
-      // Add price filters
-      if (appliedFilters.minPrice) {
-        params.minPrice = appliedFilters.minPrice;
-      }
-      if (appliedFilters.maxPrice) {
-        params.maxPrice = appliedFilters.maxPrice;
-      }
+      if (selectedCategory) params.categoryId = selectedCategory;
+      if (appliedFilters.minPrice) params.minPrice = appliedFilters.minPrice;
+      if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
 
       const response = await productService.search(params);
       let filteredProducts = response.content || [];
 
-      // Apply client-side filters (size, color, rating)
-      // These need to be done client-side unless backend supports them
       if (appliedFilters.sizes.length > 0) {
-        filteredProducts = filteredProducts.filter(product =>
-          product.variants?.some(v => 
-            appliedFilters.sizes.includes(v.size)
-          )
-        );
+        filteredProducts = filteredProducts.filter(p => p.variants?.some(v => appliedFilters.sizes.includes(v.size)));
       }
-
       if (appliedFilters.colors.length > 0) {
-        filteredProducts = filteredProducts.filter(product =>
-          product.variants?.some(v => 
-            appliedFilters.colors.includes(v.color)
-          )
-        );
+        filteredProducts = filteredProducts.filter(p => p.variants?.some(v => appliedFilters.colors.includes(v.color)));
       }
-
       if (appliedFilters.minRating) {
-        filteredProducts = filteredProducts.filter(product =>
-          (product.averageRating || 0) >= appliedFilters.minRating
-        );
+        filteredProducts = filteredProducts.filter(p => (p.averageRating || 0) >= appliedFilters.minRating);
       }
 
       setProducts(filteredProducts);
       setTotalPages(response.totalPages || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const updateUrlParams = (cat, page, filts) => {
@@ -146,8 +117,8 @@ const ShopPage = () => {
     if (page > 0) params.set('page', page);
     if (filts.minPrice) params.set('priceMin', filts.minPrice);
     if (filts.maxPrice) params.set('priceMax', filts.maxPrice);
-    if (filts.sizes && filts.sizes.length > 0) params.set('size', filts.sizes.join(','));
-    if (filts.colors && filts.colors.length > 0) params.set('color', filts.colors.join(','));
+    if (filts.sizes?.length > 0) params.set('size', filts.sizes.join(','));
+    if (filts.colors?.length > 0) params.set('color', filts.colors.join(','));
     if (filts.minRating) params.set('ratingMin', filts.minRating);
     setSearchParams(params);
   };
@@ -156,31 +127,16 @@ const ShopPage = () => {
     setAppliedFilters(filters);
     setCurrentPage(0);
     updateUrlParams(selectedCategory, 0, filters);
-    toast.success('Filters applied!');
+    setShowFiltersModal(false);
   };
 
   const handleClearFilters = () => {
-    const emptyFilters = {
-      sizes: [],
-      colors: [],
-      minPrice: null,
-      maxPrice: null,
-      minRating: null,
-    };
-    setFilters(emptyFilters);
-    setAppliedFilters(emptyFilters);
+    const empty = { sizes: [], colors: [], minPrice: null, maxPrice: null, minRating: null };
+    setFilters(empty);
+    setAppliedFilters(empty);
     setCurrentPage(0);
-    updateUrlParams(selectedCategory, 0, emptyFilters);
-    toast.success('Filters cleared!');
-  };
-
-  const handleLike = async (productId) => {
-    try {
-      await socialService.likeProduct(productId);
-      toast.success('Product liked!');
-    } catch (error) {
-      console.error('Error liking product:', error);
-    }
+    updateUrlParams(selectedCategory, 0, empty);
+    setShowFiltersModal(false);
   };
 
   const handleCategoryChange = (categoryId) => {
@@ -190,162 +146,252 @@ const ShopPage = () => {
     updateUrlParams(newCat, 0, appliedFilters);
   };
 
+  const removeFilterTag = (type, value) => {
+    let newFilters = { ...filters };
+    if (type === 'size') newFilters.sizes = filters.sizes.filter(s => s !== value);
+    if (type === 'color') newFilters.colors = filters.colors.filter(c => c !== value);
+    if (type === 'price') { newFilters.minPrice = null; newFilters.maxPrice = null; }
+    if (type === 'rating') newFilters.minRating = null;
+    
+    setFilters(newFilters);
+    setAppliedFilters(newFilters);
+    updateUrlParams(selectedCategory, currentPage, newFilters);
+  };
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
     updateUrlParams(selectedCategory, newPage, appliedFilters);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Check if filters have changed
-  const hasUnappliedFilters = JSON.stringify(filters) !== JSON.stringify(appliedFilters);
+  const handleLike = async (productId) => {
+    try {
+      // Optimistic UI update
+      setProducts(prev => prev.map(p => {
+        if (p.productId === productId) {
+          const isLiked = !p.isLiked;
+          return {
+            ...p,
+            isLiked,
+            likesCount: isLiked ? (p.likesCount || 0) + 1 : Math.max(0, (p.likesCount || 0) - 1)
+          };
+        }
+        return p;
+      }));
+
+      await socialService.likeProduct(productId);
+      // Removed toast for a more subtle experience, or keep it if desired
+    } catch (error) {
+      console.error('Error liking product:', error);
+      // Rollback on error if necessary
+    }
+  };
+
+  const handleAddToCart = async (product) => {
+    if (!user) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+
+    if (!product.variants || product.variants.length === 0) {
+      toast.error('No variants available for this product');
+      return;
+    }
+
+    try {
+      // Pick the first available variant
+      const firstVariant = product.variants[0];
+      await addItem(product.productId, firstVariant.variantId, 1);
+      toast.success(`${product.title} added to cart!`);
+    } catch (error) {
+      toast.error('Failed to add to cart');
+    }
+  };
+
+  const activeFilterCount = appliedFilters.sizes.length + appliedFilters.colors.length + 
+    (appliedFilters.minPrice || appliedFilters.maxPrice ? 1 : 0) + (appliedFilters.minRating ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Container className="py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Shop</h1>
-              <p className="text-gray-600 text-sm mt-1">
-                Discover amazing products
-              </p>
-            </div>
-
-            {/* Mobile Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-300"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>Filters</span>
-            </button>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex items-center space-x-3 overflow-x-auto pb-2">
+    <div className="min-h-screen bg-white">
+      <Container className="py-8">
+        {/* Category Pill Bar */}
+        <div className="relative flex items-center mb-10 group">
+          <div className="flex-1 flex items-center space-x-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
             <button
               onClick={() => handleCategoryChange(null)}
-              className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
+              className={`px-6 py-2 rounded-full text-[12px] font-black uppercase tracking-widest transition-all duration-500 shadow-sm ${
                 selectedCategory === null
-                  ? 'bg-burgundy text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:border-burgundy'
+                  ? 'bg-burgundy text-white shadow-burgundy/20'
+                  : 'bg-white text-burgundy border border-burgundy/10 hover:border-burgundy/30 hover:bg-[#FDF4F6]'
               }`}
             >
               All
             </button>
-            {categories.map((category) => (
+            {categories.map((cat) => (
               <button
-                key={category.categoryId}
-                onClick={() => handleCategoryChange(category.categoryId)}
-                className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === category.categoryId
-                    ? 'bg-burgundy text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-burgundy'
+                key={cat.categoryId}
+                onClick={() => handleCategoryChange(cat.categoryId)}
+                className={`px-6 py-2 rounded-full text-[12px] font-black whitespace-nowrap uppercase tracking-widest transition-all duration-500 shadow-sm ${
+                  selectedCategory === cat.categoryId
+                    ? 'bg-burgundy text-white shadow-burgundy/20'
+                    : 'bg-white text-burgundy border border-burgundy/10 hover:border-burgundy/30 hover:bg-[#FDF4F6]'
                 }`}
               >
-                {category.name}
+                {cat.name}
               </button>
             ))}
           </div>
+          {/* Subtle scroll arrow as seen in design */}
+          <div className="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-burgundy/10 bg-white text-burgundy ml-4 cursor-pointer hover:bg-[#FDF4F6] transition-colors">
+            <ChevronDown className="w-4 h-4 -rotate-90" />
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Products Grid */}
-          <div className="lg:col-span-3">
-            {/* Sort & Results Count */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-gray-600 text-sm">
-                {loading ? 'Loading...' : `${products.length} products found`}
-              </p>
+        {/* Toolbar Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowFiltersModal(true)}
+              className="flex items-center space-x-2 px-5 py-2.5 bg-[#FDF4F6] text-burgundy rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-burgundy/10 transition-all border border-burgundy/5"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 bg-burgundy text-white text-[9px] rounded-full flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+              <ChevronDown className="w-3.5 h-3.5 opacity-30" />
+            </button>
+            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest pl-2">
+              {products.length} products found
+            </p>
+          </div>
 
-              <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-600">Sort by:</label>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sort by:</span>
+              <div className="relative">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-burgundy"
+                  className="appearance-none bg-white border border-gray-100 rounded-xl px-5 py-2.5 pr-10 text-[11px] font-black text-gray-900 uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-burgundy/5 hover:border-gray-200 transition-all cursor-pointer"
                 >
-                  {SORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                  {SORT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-burgundy pointer-events-none" />
               </div>
             </div>
 
-            {/* Products */}
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FeedSkeleton count={6} />
-              </div>
-            ) : products.length === 0 ? (
-              <EmptyState
-                icon={ShoppingBag}
-                title="No products found"
-                description="Try adjusting your filters or search criteria"
-                actionLabel="Clear Filters"
-                onAction={handleClearFilters}
-              />
-            ) : (
-              <>
-                <ProductGrid products={products} onLike={handleLike} />
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+            <div className="flex items-center bg-gray-50/50 p-1 rounded-xl border border-gray-100">
+              <button 
+                onClick={() => setViewType('grid')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'grid' ? 'bg-white text-burgundy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setViewType('list')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'list' ? 'bg-white text-burgundy shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+        </div>
 
-          {/* Filters Sidebar - Always visible on desktop, toggleable on mobile */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block lg:col-span-1`}>
-            <div className="sticky top-24 bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-              <div className="p-6">
+        {/* Active Filter Tags */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-8">
+            {appliedFilters.sizes.map(s => (
+              <div key={s} className="flex items-center space-x-2 bg-[#FDF4F6] text-burgundy px-4 py-2 rounded-full border border-burgundy/5 text-[10px] font-black uppercase tracking-widest">
+                <span>{s}</span>
+                <button onClick={() => removeFilterTag('size', s)}><X className="w-3 h-3" /></button>
+              </div>
+            ))}
+            {appliedFilters.colors.map(c => (
+              <div key={c} className="flex items-center space-x-2 bg-[#FDF4F6] text-burgundy px-4 py-2 rounded-full border border-burgundy/5 text-[10px] font-black uppercase tracking-widest">
+                <span>{c}</span>
+                <button onClick={() => removeFilterTag('color', c)}><X className="w-3 h-3" /></button>
+              </div>
+            ))}
+            <button 
+              onClick={handleClearFilters}
+              className="text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-burgundy px-4 py-2 transition-colors"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {/* Main Grid */}
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <FeedSkeleton count={10} />
+          </div>
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={ShoppingBag}
+            title="No products found"
+            description="Try adjusting your filters"
+            actionLabel="Clear Filters"
+            onAction={handleClearFilters}
+          />
+        ) : (
+          <>
+            <div className={viewType === 'grid' ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" : ""}>
+              <ProductGrid 
+                products={products} 
+                onLike={handleLike} 
+                onAddToCart={handleAddToCart}
+                viewType={viewType} 
+              />
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-12 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </Container>
+
+      {/* Filter Modal Overlay */}
+      {showFiltersModal && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-6">
+            <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity" onClick={() => setShowFiltersModal(false)}></div>
+            <div className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden transform transition-all">
+              <div className="p-10 border-b border-gray-50 flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-black text-gray-900 italic tracking-tighter">Filters</h2>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Refine your search</p>
+                </div>
+                <button onClick={() => setShowFiltersModal(false)} className="p-3 hover:bg-gray-100 rounded-full transition-colors group">
+                  <X className="w-6 h-6 text-gray-400 group-hover:text-burgundy" />
+                </button>
+              </div>
+              <div className="p-10 max-h-[60vh] overflow-y-auto no-scrollbar">
                 <ProductFilters
                   filters={filters}
-                  onFilterChange={handleFilterChange}
+                  onFilterChange={(newF) => setFilters(prev => ({ ...prev, ...newF }))}
                   onClearFilters={handleClearFilters}
                 />
               </div>
-              
-              {/* Apply Filters Button Block */}
-              <div className="p-6 pt-0 border-t border-gray-100 bg-gray-50/50">
-                <Button
-                  variant="primary"
-                  fullWidth
-                  onClick={handleApplyFilters}
-                  disabled={!hasUnappliedFilters}
-                >
-                  Apply Filters
-                </Button>
-                {hasUnappliedFilters && (
-                  <p className="text-xs text-burgundy text-center mt-2 font-medium animate-pulse">
-                    Click to update results
-                  </p>
-                )}
-                <Button
-                  variant="outline"
-                  fullWidth
-                  className="mt-2"
-                  onClick={handleClearFilters}
-                >
-                  Clear All
-                </Button>
+              <div className="p-8 bg-gray-50/50 flex items-center space-x-3 border-t border-gray-100">
+                <Button variant="outline" fullWidth size="sm" className="rounded-xl text-[11px] font-black uppercase tracking-widest" onClick={handleClearFilters}>Clear all</Button>
+                <Button variant="primary" fullWidth size="sm" className="rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-burgundy/10" onClick={handleApplyFilters}>Show Products</Button>
               </div>
             </div>
           </div>
         </div>
-      </Container>
+      )}
     </div>
   );
 };

@@ -51,211 +51,120 @@ const ProductFilters = ({ filters, onFilterChange, onClearFilters }) => {
     filters.minRating;
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-        <div className="flex items-center space-x-2">
-          {hasActiveFilters && (
-            <button
-              onClick={onClearFilters}
-              className="text-sm text-burgundy hover:text-burgundy-dark flex items-center space-x-1"
-            >
-              <X className="w-4 h-4" />
-              <span>Clear</span>
-            </button>
+    <div className="space-y-10">
+      {/* Size Filter */}
+      <div className="space-y-4">
+        <button
+          onClick={() => toggleSection('size')}
+          className="flex items-center justify-between w-full group"
+        >
+          <span className="text-[13px] font-black text-gray-900 uppercase tracking-widest">Size</span>
+          {expandedSections.size ? (
+            <ChevronUp className="w-4 h-4 text-burgundy" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           )}
-          {/* Mobile close button: passed as a prop if we want to handle it externally, 
-              but for now we can just use the toggle logic from props if we add it. 
-              Let's just keep it simple and focus on the main layout fix first. */}
-        </div>
+        </button>
+
+        {expandedSections.size && (
+          <div className="grid grid-cols-3 gap-3 animate-fade-in">
+            {SIZES.map((size) => (
+              <button
+                key={size}
+                onClick={() => handleSizeChange(size)}
+                className={`px-4 py-3 text-[11px] font-black rounded-xl border-2 transition-all duration-300 ${
+                  filters.sizes?.includes(size)
+                    ? 'border-burgundy bg-burgundy text-white shadow-lg shadow-burgundy/20'
+                    : 'border-gray-100 text-gray-400 hover:border-burgundy/30 hover:text-burgundy'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="space-y-6">
-        {/* Size Filter */}
-        <div>
-          <button
-            onClick={() => toggleSection('size')}
-            className="flex items-center justify-between w-full mb-3"
-          >
-            <span className="font-medium text-gray-900">Size</span>
-            {expandedSections.size ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            )}
-          </button>
+      <div className="h-[1px] bg-gray-50"></div>
 
-          {expandedSections.size && (
-            <div className="grid grid-cols-3 gap-2">
-              {SIZES.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => handleSizeChange(size)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all ${
-                    filters.sizes?.includes(size)
-                      ? 'border-burgundy bg-burgundy text-white'
-                      : 'border-gray-300 hover:border-burgundy'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+      {/* Color Filter */}
+      <div className="space-y-4">
+        <button
+          onClick={() => toggleSection('color')}
+          className="flex items-center justify-between w-full group"
+        >
+          <span className="text-[13px] font-black text-gray-900 uppercase tracking-widest">Color</span>
+          {expandedSections.color ? (
+            <ChevronUp className="w-4 h-4 text-burgundy" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           )}
-        </div>
+        </button>
 
-        <div className="border-t border-gray-200"></div>
+        {expandedSections.color && (
+          <div className="grid grid-cols-2 gap-3 animate-fade-in">
+            {COLORS.map((color) => (
+              <button
+                key={color.name}
+                onClick={() => handleColorChange(color.name)}
+                className={`flex items-center space-x-3 p-3 rounded-xl border-2 transition-all duration-300 ${
+                  filters.colors?.includes(color.name)
+                    ? 'border-burgundy bg-burgundy/5 text-burgundy'
+                    : 'border-gray-100 text-gray-500 hover:border-burgundy/30'
+                }`}
+              >
+                <div
+                  className="w-5 h-5 rounded-full border border-gray-100 shadow-inner"
+                  style={{ backgroundColor: color.hex }}
+                ></div>
+                <span className="text-[11px] font-bold uppercase tracking-widest">{color.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Color Filter */}
-        <div>
-          <button
-            onClick={() => toggleSection('color')}
-            className="flex items-center justify-between w-full mb-3"
-          >
-            <span className="font-medium text-gray-900">Color</span>
-            {expandedSections.color ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            )}
-          </button>
+      <div className="h-[1px] bg-gray-50"></div>
 
-          {expandedSections.color && (
-            <div className="space-y-2">
-              {COLORS.map((color) => (
-                <label
-                  key={color.name}
-                  className="flex items-center space-x-3 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.colors?.includes(color.name) || false}
-                    onChange={() => handleColorChange(color.name)}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 transition-all ${
-                        filters.colors?.includes(color.name)
-                          ? 'border-burgundy ring-2 ring-burgundy ring-offset-2'
-                          : 'border-gray-300 group-hover:border-burgundy'
-                      }`}
-                      style={{ backgroundColor: color.hex }}
-                    ></div>
-                    <span className="text-sm text-gray-700">{color.name}</span>
-                  </div>
-                </label>
-              ))}
-            </div>
+      {/* Price Range Filter */}
+      <div className="space-y-4">
+        <button
+          onClick={() => toggleSection('price')}
+          className="flex items-center justify-between w-full group"
+        >
+          <span className="text-[13px] font-black text-gray-900 uppercase tracking-widest">Price Range</span>
+          {expandedSections.price ? (
+            <ChevronUp className="w-4 h-4 text-burgundy" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           )}
-        </div>
+        </button>
 
-        <div className="border-t border-gray-200"></div>
-
-        {/* Price Range Filter */}
-        <div>
-          <button
-            onClick={() => toggleSection('price')}
-            className="flex items-center justify-between w-full mb-3"
-          >
-            <span className="font-medium text-gray-900">Price Range</span>
-            {expandedSections.price ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            )}
-          </button>
-
-          {expandedSections.price && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Min Price ($)</label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  value={filters.minPrice || ''}
-                  onChange={handlePriceChange}
-                  placeholder="0"
-                  min="0"
-                  className="input text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Max Price ($)</label>
-                <input
-                  type="number"
-                  name="maxPrice"
-                  value={filters.maxPrice || ''}
-                  onChange={handlePriceChange}
-                  placeholder="1000"
-                  min="0"
-                  className="input text-sm"
-                />
-              </div>
+        {expandedSections.price && (
+          <div className="flex items-center space-x-4 animate-fade-in">
+            <div className="flex-1">
+              <input
+                type="number"
+                name="minPrice"
+                value={filters.minPrice || ''}
+                onChange={handlePriceChange}
+                placeholder="Min"
+                className="w-full bg-gray-50 border-none rounded-xl px-5 py-3 text-sm font-bold focus:ring-2 focus:ring-burgundy/10"
+              />
             </div>
-          )}
-        </div>
-
-        <div className="border-t border-gray-200"></div>
-
-        {/* Rating Filter */}
-        <div>
-          <button
-            onClick={() => toggleSection('rating')}
-            className="flex items-center justify-between w-full mb-3"
-          >
-            <span className="font-medium text-gray-900">Ratings</span>
-            {expandedSections.rating ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
-            )}
-          </button>
-
-          {expandedSections.rating && (
-            <div className="space-y-2">
-              {[5, 4, 3, 2, 1].map((rating) => (
-                <label
-                  key={rating}
-                  className="flex items-center space-x-2 cursor-pointer group"
-                >
-                  <input
-                    type="radio"
-                    name="rating"
-                    checked={filters.minRating === rating}
-                    onChange={() => handleRatingChange(rating)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 transition-all ${
-                      filters.minRating === rating
-                        ? 'border-burgundy bg-burgundy'
-                        : 'border-gray-300 group-hover:border-burgundy'
-                    }`}
-                  >
-                    {filters.minRating === rating && (
-                      <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <span
-                        key={i}
-                        className={`text-sm ${
-                          i < rating ? 'text-yellow-400' : 'text-gray-300'
-                        }`}
-                      >
-                        ★
-                      </span>
-                    ))}
-                    <span className="text-sm text-gray-600 ml-1">& Up</span>
-                  </div>
-                </label>
-              ))}
+            <span className="text-gray-300">—</span>
+            <div className="flex-1">
+              <input
+                type="number"
+                name="maxPrice"
+                value={filters.maxPrice || ''}
+                onChange={handlePriceChange}
+                placeholder="Max"
+                className="w-full bg-gray-50 border-none rounded-xl px-5 py-3 text-sm font-bold focus:ring-2 focus:ring-burgundy/10"
+              />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

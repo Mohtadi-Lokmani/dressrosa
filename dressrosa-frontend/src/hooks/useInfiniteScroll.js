@@ -5,6 +5,7 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
     initialPage = 0,
     pageSize = 20,
     threshold = 300, // Distance from bottom to trigger load
+    dependencies = [], // Dependencies to trigger reset
   } = options;
 
   const [data, setData] = useState([]);
@@ -14,10 +15,14 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
   const [error, setError] = useState(null);
   const observerRef = useRef(null);
 
-  // Fetch data
-  const fetchData = useCallback(async (pageNum) => {
-    if (loading || !hasMore) return;
+  // Helper to check if we're currently fetching
+  const isFetchingRef = useRef(false);
 
+  // Fetch data
+  const fetchData = useCallback(async (pageNum, isReset = false) => {
+    if (isFetchingRef.current || (!hasMore && !isReset)) return;
+
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -30,7 +35,7 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
       const newData = response.content || [];
       const isLastPage = response.last || response.totalPages === pageNum + 1;
 
-      setData((prev) => (pageNum === 0 ? newData : [...prev, ...newData]));
+      setData((prev) => (isReset ? newData : [...prev, ...newData]));
       setHasMore(!isLastPage && newData.length > 0);
       setPage(pageNum);
     } catch (err) {
@@ -38,17 +43,22 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [fetchFunction, pageSize, loading, hasMore]);
+  }, [fetchFunction, pageSize, hasMore]);
 
-  // Initial load
+  // Initial load & dependencies reset
   useEffect(() => {
-    fetchData(initialPage);
-  }, []);
+    setData([]);
+    setPage(initialPage);
+    setHasMore(true);
+    fetchData(initialPage, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, dependencies);
 
   // Scroll handler
   const handleScroll = useCallback(() => {
-    if (loading || !hasMore) return;
+    if (isFetchingRef.current || !hasMore) return;
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollHeight = document.documentElement.scrollHeight;
@@ -57,7 +67,7 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
     if (scrollHeight - scrollTop - clientHeight < threshold) {
       fetchData(page + 1);
     }
-  }, [loading, hasMore, page, threshold, fetchData]);
+  }, [hasMore, page, threshold, fetchData]);
 
   // Attach scroll listener
   useEffect(() => {
@@ -70,7 +80,7 @@ export const useInfiniteScroll = (fetchFunction, options = {}) => {
     setData([]);
     setPage(initialPage);
     setHasMore(true);
-    fetchData(initialPage);
+    fetchData(initialPage, true);
   }, [fetchData, initialPage]);
 
   return {

@@ -37,14 +37,14 @@ api.interceptors.response.use(
     // Handle authentication errors
     const isAuthEndpoint = error.config?.url?.includes('/api/auth/');
 
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
       storage.auth.clearAuth();
 
       if (!isAuthEndpoint) {
         toast.error('Session expired. Please login again.');
         window.location.href = '/login';
       }
-    } else if (!isAuthEndpoint) {
+    } else if (!isAuthEndpoint && error.response?.status !== 403) {
       toast.error(message);
     }
     

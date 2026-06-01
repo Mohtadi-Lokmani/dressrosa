@@ -18,16 +18,16 @@ const HomePage = () => {
 
   // Fetch function for infinite scroll
   const fetchProducts = async ({ page, size }) => {
-    return await productService.getAll({
+    return await productService.getFeed({
       page,
       size,
-      status: filters.status,
-      sort: filters.sort,
+      filter: activeTab,
     });
   };
 
   const { data: products, loading, hasMore } = useInfiniteScroll(fetchProducts, {
     pageSize: 20,
+    dependencies: [activeTab], // Reset when tab changes
   });
 
   const handleLike = async (productId) => {

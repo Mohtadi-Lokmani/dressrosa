@@ -20,6 +20,10 @@ public class ProductListResponse {
     // Variantes pour le filtrage
     private List<ProductVariantResponse> variants;
     
+    // Category info
+    private Long categoryId;
+    private String categoryName;
+    
 
     private String imageUrl;
     private List<ProductMediaDTO> media;
@@ -28,4 +32,6 @@ public class ProductListResponse {
     private Boolean sellerVerified;
     private Long likesCount;
     private Double averageRating;
+    private Long reviewsCount;
+    private Boolean isLiked;
 }

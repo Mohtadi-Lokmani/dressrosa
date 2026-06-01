@@ -20,6 +20,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     // Find reviews by user
     List<Review> findByUserUserId(Long userId);
+    long countByUserUserId(Long userId);
     
     // Find review by user and product (one user can only review once)
     Optional<Review> findByUserUserIdAndProductProductId(Long userId, Long productId);
@@ -39,4 +40,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     // Get recent reviews for a product
     List<Review> findTop5ByProductProductIdOrderByDateDesc(Long productId);
+
+    Page<Review> findByProductSellerUserId(Long sellerId, Pageable pageable);
+
+    @Query("SELECT COALESCE(AVG(r.rate), 0.0) FROM Review r WHERE r.product.seller.userId = :sellerId")
+    Double getAverageRatingForSeller(@Param("sellerId") Long sellerId);
 }

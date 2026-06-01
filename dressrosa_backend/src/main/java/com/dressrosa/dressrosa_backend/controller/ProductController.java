@@ -60,10 +60,43 @@ public class ProductController {
             : Sort.Direction.DESC;
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
-        
+            Long userId = null;
+        try {
+            String email = SecurityUtil.getCurrentUserEmail();
+            if (email != null && !email.equals("anonymousUser")) {
+                UserDTO currentUser = userService.getCurrentUser(email);
+                userId = currentUser.getUserId();
+            }
+        } catch (Exception e) {
+            // Not logged in
+        }
+
         Page<ProductListResponse> products = productService.getAllProducts(
-            categoryId, minPrice, maxPrice, search, pageable
+            categoryId, minPrice, maxPrice, search, userId, pageable
         );
+        
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/feed")
+    public ResponseEntity<Page<ProductListResponse>> getProductFeed(
+            @RequestParam(defaultValue = "for-you") String filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        Long userId = null;
+        try {
+            String email = SecurityUtil.getCurrentUserEmail();
+            if (email != null && !email.equals("anonymousUser")) {
+                UserDTO currentUser = userService.getCurrentUser(email);
+                userId = currentUser.getUserId();
+            }
+        } catch (Exception e) {
+            // Not logged in
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ProductListResponse> products = productService.getFilteredProducts(filter, userId, pageable);
         
         return ResponseEntity.ok(products);
     }
@@ -111,8 +144,19 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
+        Long currentUserId = null;
+        try {
+            String email = SecurityUtil.getCurrentUserEmail();
+            if (email != null && !email.equals("anonymousUser")) {
+                UserDTO currentUser = userService.getCurrentUser(email);
+                currentUserId = currentUser.getUserId();
+            }
+        } catch (Exception e) {
+            // Not logged in
+        }
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<ProductListResponse> products = productService.getSellerProducts(sellerId, pageable);
+        Page<ProductListResponse> products = productService.getSellerProducts(sellerId, currentUserId, pageable);
         return ResponseEntity.ok(products);
     }
     
@@ -127,7 +171,7 @@ public class ProductController {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<ProductListResponse> products = productService.getSellerProducts(
-            currentUser.getUserId(), pageable
+            currentUser.getUserId(), currentUser.getUserId(), pageable
         );
         
         return ResponseEntity.ok(products);

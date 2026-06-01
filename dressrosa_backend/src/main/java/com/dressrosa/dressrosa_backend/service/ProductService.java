@@ -146,6 +146,7 @@ public class ProductService {
             java.math.BigDecimal minPrice, 
             java.math.BigDecimal maxPrice, 
             String searchTerm, 
+            Long userId,
             Pageable pageable) {
         
         String safeSearch = (searchTerm == null || searchTerm.trim().isEmpty()) ? "" : searchTerm;
@@ -154,13 +155,13 @@ public class ProductService {
             categoryId, minPrice, maxPrice, safeSearch, ProductStatus.IN_STOCK, pageable
         );
         
-        return productsPage.map(this::convertToListResponse);
+        return productsPage.map(p -> convertToListResponse(p, userId));
     }
     
     
-    public Page<ProductListResponse> getSellerProducts(Long sellerId, Pageable pageable) {
+    public Page<ProductListResponse> getSellerProducts(Long sellerId, Long currentUserId, Pageable pageable) {
         Page<Product> products = productRepository.findBySellerUserId(sellerId, pageable);
-        return products.map(this::convertToListResponse);
+        return products.map(p -> convertToListResponse(p, currentUserId));
     }
     
    
@@ -182,7 +183,33 @@ public class ProductService {
             followedSellerIds, ProductStatus.IN_STOCK, pageable
         );
         
-        return products.map(this::convertToListResponse);
+        return products.map(p -> convertToListResponse(p, followerId));
+    }
+
+    public Page<ProductListResponse> getFilteredProducts(String filter, Long userId, Pageable pageable) {
+        Page<Product> productsPage;
+
+        switch (filter != null ? filter.toLowerCase() : "for-you") {
+            case "following":
+                if (userId == null) return Page.empty(pageable);
+                return getFollowingProducts(userId, pageable);
+
+            case "new":
+                java.time.LocalDateTime oneWeekAgo = java.time.LocalDateTime.now().minusWeeks(1);
+                productsPage = productRepository.findRecentProducts(ProductStatus.IN_STOCK, oneWeekAgo, pageable);
+                break;
+
+            case "popular":
+                productsPage = productRepository.findPopularProducts(ProductStatus.IN_STOCK, pageable);
+                break;
+
+            case "for-you":
+            default:
+                productsPage = productRepository.findAllInStock(pageable);
+                break;
+        }
+
+        return productsPage.map(p -> convertToListResponse(p, userId));
     }
     
    
@@ -304,7 +331,7 @@ public class ProductService {
     }
     
     
-    private ProductListResponse convertToListResponse(Product product) {
+    private ProductListResponse convertToListResponse(Product product, Long currentUserId) {
         ProductListResponse response = new ProductListResponse();
         
         response.setProductId(product.getProductId());
@@ -326,6 +353,12 @@ public class ProductService {
             .map(m -> new ProductMediaDTO(m.getUrl(), m.getType()))
             .collect(Collectors.toList()));
         
+        // Category info
+        if (product.getCategory() != null) {
+            response.setCategoryId(product.getCategory().getCategoryId());
+            response.setCategoryName(product.getCategory().getName());
+        }
+
         // Seller
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
@@ -340,6 +373,14 @@ public class ProductService {
         // Quick stats
         response.setLikesCount(likeRepository.countByProductProductId(product.getProductId()));
         response.setAverageRating(reviewRepository.getAverageRating(product.getProductId()));
+        response.setReviewsCount((long) reviewRepository.findByProductProductId(product.getProductId()).size());
+        
+        // User interaction
+        if (currentUserId != null) {
+            response.setIsLiked(likeRepository.existsByUserUserIdAndProductProductId(currentUserId, product.getProductId()));
+        } else {
+            response.setIsLiked(false);
+        }
         
         return response;
     }

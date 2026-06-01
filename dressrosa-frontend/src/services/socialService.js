@@ -135,6 +135,14 @@ export const socialService = {
   },
 
   /**
+   * Get seller reviews (for seller profile)
+   */
+  getSellerReviews: async (sellerId, params = {}) => {
+    const response = await api.get(ENDPOINTS.SOCIAL.SELLER_REVIEWS(sellerId), { params });
+    return response.data;
+  },
+
+  /**
    * Get my reviews
    */
   getMyReviews: async () => {

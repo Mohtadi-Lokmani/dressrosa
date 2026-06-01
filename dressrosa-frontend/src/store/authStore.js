@@ -41,6 +41,40 @@ export const useAuthStore = create((set, get) => ({
   },
 
   /**
+   * Google Login
+   */
+  googleLogin: async (idToken, details) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await authService.googleLogin(idToken, details);
+      get().setAuth(data, data.token);
+      set({ loading: false });
+      return data;
+    } catch (error) {
+      set({ 
+        loading: false, 
+        error: error.response?.data?.message || 'Google login failed' 
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Check Google user
+   */
+  googleCheck: async (idToken) => {
+    set({ loading: true, error: null });
+    try {
+      const exists = await authService.googleCheck(idToken);
+      set({ loading: false });
+      return exists;
+    } catch (error) {
+      set({ loading: false });
+      throw error;
+    }
+  },
+
+  /**
    * Register
    */
   register: async (userData) => {

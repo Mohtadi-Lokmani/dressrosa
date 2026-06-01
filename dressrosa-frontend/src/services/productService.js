@@ -9,6 +9,14 @@ export const productService = {
     const response = await api.get(ENDPOINTS.PRODUCTS.ALL, { params });
     return response.data;
   },
+  
+  /**
+   * Get product feed (For You, Following, New, Popular)
+   */
+  getFeed: async (params = {}) => {
+    const response = await api.get(ENDPOINTS.PRODUCTS.FEED, { params });
+    return response.data;
+  },
 
   /**
    * Get product by ID
