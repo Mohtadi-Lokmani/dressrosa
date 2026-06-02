@@ -23,4 +23,22 @@ public class ApiExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", message));
     }
+    
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        String message = ex.getMessage();
+        
+        // Check if this is a moderation/content policy error
+        if (message != null && message.contains("Content Policy Violation")) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                "message", message,
+                "type", "MODERATION_ERROR"
+            ));
+        }
+        
+        // Default error handling
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "message", message != null ? message : "An error occurred"
+        ));
+    }
 }

@@ -1,17 +1,41 @@
 package com.dressrosa.dressrosa_backend.service;
 
-import com.dressrosa.dressrosa_backend.dto.product.*;
-import com.dressrosa.dressrosa_backend.model.*;
-import com.dressrosa.dressrosa_backend.repository.*;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.List;
-import java.util.stream.Collectors;
+import com.dressrosa.dressrosa_backend.dto.product.ProductListResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductMediaDTO;
+import com.dressrosa.dressrosa_backend.dto.product.ProductRequest;
+import com.dressrosa.dressrosa_backend.dto.product.ProductResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductVariantRequest;
+import com.dressrosa.dressrosa_backend.dto.product.ProductVariantResponse;
+import com.dressrosa.dressrosa_backend.dto.moderation.ModerationRequest;
+import com.dressrosa.dressrosa_backend.dto.moderation.ModerationResponse;
+import com.dressrosa.dressrosa_backend.model.Category;
+import com.dressrosa.dressrosa_backend.model.Follow;
+import com.dressrosa.dressrosa_backend.model.MediaType;
+import com.dressrosa.dressrosa_backend.model.Product;
+import com.dressrosa.dressrosa_backend.model.ProductMedia;
+import com.dressrosa.dressrosa_backend.model.ProductStatus;
+import com.dressrosa.dressrosa_backend.model.ProductVariant;
+import com.dressrosa.dressrosa_backend.model.ProductView;
+import com.dressrosa.dressrosa_backend.model.User;
+import com.dressrosa.dressrosa_backend.repository.CategoryRepository;
+import com.dressrosa.dressrosa_backend.repository.FollowRepository;
+import com.dressrosa.dressrosa_backend.repository.LikeRepository;
+import com.dressrosa.dressrosa_backend.repository.ProductMediaRepository;
+import com.dressrosa.dressrosa_backend.repository.ProductRepository;
+import com.dressrosa.dressrosa_backend.repository.ProductVariantRepository;
+import com.dressrosa.dressrosa_backend.repository.ProductViewRepository;
+import com.dressrosa.dressrosa_backend.repository.ReviewRepository;
+import com.dressrosa.dressrosa_backend.repository.SavedRepository;
+import com.dressrosa.dressrosa_backend.repository.UserRepository;
 
 @Service
 public class ProductService {
@@ -41,6 +65,7 @@ public class ProductService {
     private ReviewRepository reviewRepository;
     
     @Autowired
+    private ModerationService moderationService;
     private FollowRepository followRepository;
     
     @Autowired
@@ -49,6 +74,28 @@ public class ProductService {
    
     @Transactional
     public ProductResponse createProduct(ProductRequest request, Long sellerId) {
+        // ===== STEP 1: MODERATION CHECK =====
+        // Check title and description for inappropriate content before publishing
+        ModerationRequest moderationReq = new ModerationRequest();
+        moderationReq.setTitle(request.getTitle());
+        moderationReq.setDescription(request.getDescription());
+        
+        ModerationResponse moderationResult = moderationService.moderateProductContent(moderationReq);
+        
+        // If moderation fails, throw exception to prevent product creation
+        if ("INVALID".equals(moderationResult.getStatus())) {
+            String fieldName = moderationResult.getFlaggedField();
+            String userMessage = String.format(
+                "❌ Content Policy Violation: Your product %s contains inappropriate content and cannot be published. " +
+                "Please revise your %s and try again. Reason: %s",
+                fieldName,
+                fieldName,
+                moderationResult.getReason()
+            );
+            throw new RuntimeException(userMessage);
+        }
+        
+        // ===== STEP 2: CREATE PRODUCT =====
         // Find seller
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
@@ -210,6 +257,15 @@ public class ProductService {
         }
 
         return productsPage.map(p -> convertToListResponse(p, userId));
+    }
+    
+    /**
+     * Convert product to list response for public viewing (no user context)
+     * @param product The product to convert
+     * @return ProductListResponse without user-specific data
+     */
+    public ProductListResponse convertToListResponsePublic(Product product) {
+        return convertToListResponse(product, null);
     }
     
    
