@@ -42,16 +42,20 @@ public class StudioHomeService {
                 .build());
         }
 
-        // 2. Unread Messages (placeholder for now, needs real count)
-        items.add(StudioHomeTodoResponse.TodoItem.builder()
-            .id("messages-unread")
-            .type("MESSAGE")
-            .title("Unread messages")
-            .description("Buyers are waiting for your response.")
-            .actionText("Reply Now")
-            .actionLink("/studio/messages")
-            .priority("MEDIUM")
-            .build());
+        // 2. Unread Messages
+        long unreadMessages = messageRepository.countByReceiverUserIdAndIsReadFalse(sellerId);
+        if (unreadMessages > 0) {
+            items.add(StudioHomeTodoResponse.TodoItem.builder()
+                .id("messages-unread")
+                .type("MESSAGE")
+                .title(unreadMessages + " unread messages")
+                .description("Buyers are waiting for your response.")
+                .actionText("Reply Now")
+                .actionLink("/studio/messages")
+                .count((int) unreadMessages)
+                .priority("MEDIUM")
+                .build());
+        }
 
         // 3. Out of Stock
         // This is a placeholder logic, would need a findOutOfStockBySeller in productRepository

@@ -253,25 +253,20 @@ public class ProductService {
         if (!product.getSeller().getUserId().equals(sellerId)) {
             throw new RuntimeException("You can only delete your own products");
         }
-        
         productRepository.delete(product);
     }
 
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 3600000) // Run every hour
     @Transactional
-    public ProductResponse toggleBoost(Long productId, Long sellerId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-        
-        // Check ownership
-        if (!product.getSeller().getUserId().equals(sellerId)) {
-            throw new RuntimeException("Unauthorized to boost this product");
+    public void cleanupExpiredBoosts() {
+        List<Product> boostedProducts = productRepository.findByIsBoostedTrue();
+        for (Product p : boostedProducts) {
+            if (p.getBoostExpiresAt() != null && p.getBoostExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+                p.setIsBoosted(false);
+                p.setBoostExpiresAt(null);
+                productRepository.save(p);
+            }
         }
-        
-        // Toggle boost
-        product.setIsBoosted(!product.getIsBoosted());
-        Product saved = productRepository.save(product);
-        
-        return convertToResponse(saved);
     }
     
    

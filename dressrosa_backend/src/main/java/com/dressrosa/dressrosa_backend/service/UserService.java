@@ -43,6 +43,9 @@ public class UserService {
     private ReviewRepository reviewRepository;
     
     @Autowired
+    private MessageRepository messageRepository;
+    
+    @Autowired
     private PasswordEncoder passwordEncoder;
     
     @Autowired
@@ -292,6 +295,19 @@ public class UserService {
                 .type("ORDER")
                 .priority("HIGH")
                 .actionUrl("/studio/orders")
+                .build());
+        }
+        
+        // 2b. Unread Messages
+        long unreadMessages = messageRepository.countByReceiverUserIdAndIsReadFalse(sellerId);
+        if (unreadMessages > 0) {
+            items.add(StudioTodoResponse.TodoItem.builder()
+                .id("unread_messages")
+                .title(unreadMessages + " Unread Messages")
+                .description("Buyers are waiting for your response.")
+                .type("MESSAGE")
+                .priority("MEDIUM")
+                .actionUrl("/studio/messages")
                 .build());
         }
         

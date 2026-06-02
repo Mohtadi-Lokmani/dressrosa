@@ -35,11 +35,16 @@ const InputField = ({ label, error, children }) => (
   </div>
 );
 
-const PaymentModal = ({ order, onPaymentSuccess, onClose }) => {
+const PaymentModal = ({ order, product, type = "ORDER", onPaymentSuccess, onClose }) => {
   const [processing, setProcessing] = useState(false);
   const [done, setDone] = useState(false);
   const [errors, setErrors] = useState({});
   const [cardData, setCardData] = useState({ number: '', expiry: '', cvc: '', name: '' });
+
+  const isBoost = type === 'BOOST';
+  const displayId = isBoost ? product?.productId : order?.orderId;
+  const amount = isBoost ? 5 : order?.totalAmount;
+  const title = isBoost ? "Boost Product" : "Secure Payment";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,7 +63,11 @@ const PaymentModal = ({ order, onPaymentSuccess, onClose }) => {
 
     try {
       setProcessing(true);
-      const intent = await paymentService.createPaymentIntent(order.orderId);
+      const requestPayload = isBoost 
+        ? { productId: product.productId, type: 'BOOST' }
+        : { orderId: order.orderId, type: 'ORDER' };
+        
+      const intent = await paymentService.createPaymentIntent(requestPayload);
       // Simulate processing delay (replace with real Stripe.js confirmCardPayment when ready)
       await new Promise(r => setTimeout(r, 2000));
       await paymentService.confirmPayment(intent.transactionId);
@@ -83,8 +92,8 @@ const PaymentModal = ({ order, onPaymentSuccess, onClose }) => {
               <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-serif text-gray-900">Secure Payment</h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Order #{order.orderId}</p>
+              <h3 className="text-lg font-serif text-gray-900">{title}</h3>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{isBoost ? 'Product' : 'Order'} #{displayId}</p>
             </div>
           </div>
           <button onClick={onClose} disabled={processing} className="p-2 hover:bg-gray-50 rounded-full transition-colors text-gray-400 disabled:opacity-30">
@@ -99,14 +108,14 @@ const PaymentModal = ({ order, onPaymentSuccess, onClose }) => {
               <CheckCircle className="w-9 h-9 text-emerald-500" />
             </div>
             <h4 className="text-xl font-serif text-gray-900 mb-2">Payment Confirmed!</h4>
-            <p className="text-sm text-gray-500">Redirecting to your order...</p>
+            <p className="text-sm text-gray-500">{isBoost ? 'Your product is now boosted for 7 days.' : 'Redirecting to your order...'}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-7 space-y-5">
             {/* Amount */}
             <div className="bg-burgundy/[0.03] border border-burgundy/10 rounded-2xl p-4 flex items-center justify-between">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</span>
-              <span className="text-2xl font-black text-burgundy">{formatPrice(order.totalAmount)}</span>
+              <span className="text-2xl font-black text-burgundy">{formatPrice(amount)}</span>
             </div>
 
             {/* Card Preview Strip */}

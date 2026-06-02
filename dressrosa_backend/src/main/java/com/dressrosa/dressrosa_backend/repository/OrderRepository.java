@@ -75,4 +75,21 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "GROUP BY CAST(o.orderDate AS date) " +
            "ORDER BY orderDay ASC")
     List<Object[]> findDailyRevenueForSeller(@Param("sellerId") Long sellerId, @Param("since") LocalDateTime since);
+
+    // Platform-wide revenue (for admin dashboard)
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'DELIVERED'")
+    java.math.BigDecimal getPlatformTotalRevenue();
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
+           "WHERE o.status = 'DELIVERED' " +
+           "AND MONTH(o.orderDate) = MONTH(CURRENT_DATE) " +
+           "AND YEAR(o.orderDate) = YEAR(CURRENT_DATE)")
+    java.math.BigDecimal getPlatformMonthRevenue();
+
+    // Count orders after a date (for admin dashboard)
+    long countByOrderDateAfter(LocalDateTime since);
+
+    @Query("SELECT COUNT(o) > 0 FROM Order o JOIN o.orderDetails od " +
+           "WHERE o.buyer.userId = :userId AND od.product.productId = :productId AND o.status = 'DELIVERED'")
+    boolean hasUserPurchasedProduct(@Param("userId") Long userId, @Param("productId") Long productId);
 }

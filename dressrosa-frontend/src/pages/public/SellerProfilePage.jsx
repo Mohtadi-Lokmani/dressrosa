@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Calendar, MapPin, ShoppingBag, CheckCircle2, Heart } from 'lucide-react';
+import { Star, Calendar, MapPin, ShoppingBag, CheckCircle2, Heart, ArrowLeft } from 'lucide-react';
 import { userService } from '../../services/userService';
 import { productService } from '../../services/productService';
 import { socialService } from '../../services/socialService';
@@ -27,6 +27,23 @@ const SellerProfilePage = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('shop');
+  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [loadingCollectionItems, setLoadingCollectionItems] = useState(false);
+
+  const handleSelectCollection = async (collection) => {
+    try {
+      setLoadingCollectionItems(true);
+      setSelectedCollection(collection);
+      setActiveTab('shop');
+      const items = await collectionService.getItems(collection.collectionId);
+      setSelectedCollection({ ...collection, products: items });
+    } catch (e) {
+      console.error('Error fetching collection items:', e);
+      toast.error('Failed to load collection products');
+    } finally {
+      setLoadingCollectionItems(false);
+    }
+  };
 
   useEffect(() => {
     fetchSellerInfo();
@@ -284,62 +301,118 @@ const SellerProfilePage = () => {
               <div className="py-5">
                 {/* Shop tab */}
                 {activeTab === 'shop' && (
-                  <div className="space-y-6">
-                    {/* Collections */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-bold text-gray-900">Shop Collections</h2>
-                        <button className="text-xs font-bold text-burgundy hover:underline" onClick={() => setActiveTab('about')}>
-                          View All Collections →
+                  selectedCollection ? (
+                    <div className="space-y-6 animate-slide-in">
+                      {/* Collection Header */}
+                      <div className="flex items-center justify-between">
+                        <button 
+                          onClick={() => setSelectedCollection(null)}
+                          className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-burgundy transition-colors"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                          <span>Back to Shop</span>
                         </button>
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-burgundy/5 text-burgundy px-3 py-1.5 rounded-full border border-burgundy/10">
+                          Collection
+                        </span>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        {topCollections.map((c) => (
-                          <div key={c.collectionId} className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden">
-                            <div className="aspect-[4/3] bg-gray-100">
-                              {(c.coverImage || c.previewImages?.[0]) ? (
-                                <img
-                                  src={getImageUrl(c.coverImage || c.previewImages[0])}
-                                  alt={c.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No image</div>
-                              )}
-                            </div>
-                            <div className="p-3">
-                              <p className="text-sm font-bold text-gray-900 truncate">{c.name}</p>
-                              <p className="text-xs text-gray-500">{c.itemsCount || 0} items</p>
-                            </div>
+
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-5 bg-[#fcfcfd] rounded-2xl border border-gray-200">
+                        {(selectedCollection.coverImage || selectedCollection.previewImages?.[0]) && (
+                          <div className="w-24 h-24 rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-gray-100 border border-gray-100">
+                            <img 
+                              src={getImageUrl(selectedCollection.coverImage || selectedCollection.previewImages[0])} 
+                              alt={selectedCollection.name}
+                              className="w-full h-full object-cover" 
+                            />
                           </div>
-                        ))}
-                        {topCollections.length === 0 && (
-                          <div className="col-span-2 md:col-span-5 text-sm text-gray-500 py-6 text-center">
-                            No collections yet.
+                        )}
+                        <div>
+                          <h2 className="text-xl font-black text-gray-900 tracking-tight">{selectedCollection.name}</h2>
+                          {selectedCollection.description && (
+                            <p className="text-xs text-gray-500 mt-1 leading-relaxed max-w-xl">{selectedCollection.description}</p>
+                          )}
+                          <p className="text-[10px] font-black text-gray-400 mt-2.5 uppercase tracking-widest">{selectedCollection.products?.length ?? selectedCollection.itemsCount ?? 0} Products Available</p>
+                        </div>
+                      </div>
+
+                      {/* Products Grid */}
+                      {loadingCollectionItems ? (
+                        <div className="py-12 flex justify-center"><div className="spinner" /></div>
+                      ) : selectedCollection.products?.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                          {selectedCollection.products.map((p) => (
+                            <SellerProductCard key={p.productId} product={p} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
+                          This collection doesn't have any products yet.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Collections */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h2 className="text-lg font-bold text-gray-900">Shop Collections</h2>
+                          <button className="text-xs font-bold text-burgundy hover:underline" onClick={() => setActiveTab('about')}>
+                            View All Collections →
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                          {topCollections.map((c) => (
+                            <div 
+                              key={c.collectionId} 
+                              onClick={() => handleSelectCollection(c)}
+                              className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:border-burgundy/30 group/card transition-all duration-300 hover:shadow-sm"
+                            >
+                              <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+                                {(c.coverImage || c.previewImages?.[0]) ? (
+                                  <img
+                                    src={getImageUrl(c.coverImage || c.previewImages[0])}
+                                    alt={c.name}
+                                    className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No image</div>
+                                )}
+                              </div>
+                              <div className="p-3">
+                                <p className="text-sm font-bold text-gray-900 truncate group-hover/card:text-burgundy transition-colors">{c.name}</p>
+                                <p className="text-xs text-gray-500">{c.itemsCount || 0} items</p>
+                              </div>
+                            </div>
+                          ))}
+                          {topCollections.length === 0 && (
+                            <div className="col-span-2 md:col-span-5 text-sm text-gray-500 py-6 text-center">
+                              No collections yet.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Best selling products */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h2 className="text-lg font-bold text-gray-900">Best Selling Products</h2>
+                          <button className="text-xs font-bold text-burgundy hover:underline" onClick={() => setActiveTab('products')}>
+                            View All Products →
+                          </button>
+                        </div>
+                        {loadingProducts ? (
+                          <div className="py-10 flex justify-center"><div className="spinner" /></div>
+                        ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                            {bestSelling.map((p) => (
+                              <SellerProductCard key={p.productId} product={p} />
+                            ))}
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {/* Best selling products */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-bold text-gray-900">Best Selling Products</h2>
-                        <button className="text-xs font-bold text-burgundy hover:underline" onClick={() => setActiveTab('products')}>
-                          View All Products →
-                        </button>
-                      </div>
-                      {loadingProducts ? (
-                        <div className="py-10 flex justify-center"><div className="spinner" /></div>
-                      ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                          {bestSelling.map((p) => (
-                            <SellerProductCard key={p.productId} product={p} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  )
                 )}
 
                 {/* Products tab */}
@@ -424,20 +497,24 @@ const SellerProfilePage = () => {
                       {collections.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {collections.map((c) => (
-                            <div key={c.collectionId} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                              <div className="aspect-[4/3] bg-gray-100">
+                            <div
+                              key={c.collectionId}
+                              onClick={() => { setActiveTab('shop'); handleSelectCollection(c); }}
+                              className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-burgundy/30 group/card transition-all duration-300 hover:shadow-sm"
+                            >
+                              <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                                 {(c.coverImage || c.previewImages?.[0]) ? (
                                   <img
                                     src={getImageUrl(c.coverImage || c.previewImages[0])}
                                     alt={c.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No image</div>
                                 )}
                               </div>
                               <div className="p-3">
-                                <p className="text-sm font-bold text-gray-900 truncate">{c.name}</p>
+                                <p className="text-sm font-bold text-gray-900 truncate group-hover/card:text-burgundy transition-colors">{c.name}</p>
                                 <p className="text-xs text-gray-500">{c.itemsCount || 0} items</p>
                               </div>
                             </div>

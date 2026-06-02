@@ -47,6 +47,16 @@ import StudioBoostPage from './pages/studio/StudioBoostPage';
 import StudioProfileEditorPage from './pages/studio/StudioProfileEditorPage';
 import StudioSettingsPage from './pages/studio/StudioSettingsPage';
 
+// Admin Pages & Layout
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminReviewsPage from './pages/admin/AdminReviewsPage';
+import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+
 // Temporary placeholder
 const ComingSoon = ({ title }) => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -58,7 +68,7 @@ const ComingSoon = ({ title }) => (
 );
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   return (
     <>
@@ -85,7 +95,11 @@ function App() {
           path="/" 
           element={
             isAuthenticated ? (
-              <Navigate to="/home" replace />
+              user?.role === ROLES.ADMIN ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
             ) : (
               <Navigate to="/login" replace />
             )
@@ -95,11 +109,31 @@ function App() {
         {/* Auth Routes (No Layout) */}
         <Route 
           path="/login" 
-          element={isAuthenticated ? <Navigate to="/home" replace /> : <LoginPage />} 
+          element={
+            isAuthenticated ? (
+              user?.role === ROLES.ADMIN ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <LoginPage />
+            )
+          } 
         />
         <Route 
           path="/register" 
-          element={isAuthenticated ? <Navigate to="/home" replace /> : <RegisterPage />} 
+          element={
+            isAuthenticated ? (
+              user?.role === ROLES.ADMIN ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Navigate to="/home" replace />
+              )
+            ) : (
+              <RegisterPage />
+            )
+          } 
         />
 
         {/* Protected Routes with Layout - ALL REQUIRE LOGIN */}
@@ -192,6 +226,26 @@ function App() {
           <Route path="reviews" element={<StudioComingSoon title="Reviews" description="Manage and respond to buyer reviews." />} />
           <Route path="profile/edit" element={<StudioProfileEditorPage />} />
           <Route path="settings" element={<StudioSettingsPage />} />
+        </Route>
+
+        {/* Admin Routes — Platform Dashboard (completely separate layout, ADMIN only) */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                <AdminLayout />
+              </RoleGuard>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="notifications" element={<AdminNotificationsPage />} />
         </Route>
       </Routes>
     </>

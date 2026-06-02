@@ -201,13 +201,5 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success("Product deleted successfully"));
     }
 
-    @PostMapping("/{id}/boost")
-    @PreAuthorize("hasRole('SELLER')")
-    public ResponseEntity<ProductResponse> toggleBoost(@PathVariable Long id) {
-        String email = SecurityUtil.getCurrentUserEmail();
-        UserDTO currentUser = userService.getCurrentUser(email);
-        
-        ProductResponse updated = productService.toggleBoost(id, currentUser.getUserId());
-        return ResponseEntity.ok(updated);
-    }
+
 }

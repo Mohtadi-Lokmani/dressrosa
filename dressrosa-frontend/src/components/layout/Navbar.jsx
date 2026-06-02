@@ -9,6 +9,7 @@ import ProfileDropdown from './dropdowns/ProfileDropdown';
 import { useCartStore } from '../../store/cartStore';
 import { messageService } from '../../services/messageService';
 import { notificationService } from '../../services/notificationService';
+import { getImageUrl } from '../../utils/helpers';
 
 const Navbar = () => {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
@@ -136,9 +137,13 @@ const Navbar = () => {
             className="flex items-center space-x-1.5 p-1 rounded-xl hover:bg-gray-50 transition-all"
           >
             <div className="w-8 h-8 bg-burgundy rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-              <span className="text-white font-black text-xs">
-                {user?.userName?.charAt(0).toUpperCase() || 'D'}
-              </span>
+              {user?.profilePhoto ? (
+                <img src={getImageUrl(user.profilePhoto)} alt={user.userName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white font-black text-xs">
+                  {user?.userName?.charAt(0).toUpperCase() || 'D'}
+                </span>
+              )}
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
           </button>

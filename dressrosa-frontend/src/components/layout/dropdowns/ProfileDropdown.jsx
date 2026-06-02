@@ -37,11 +37,6 @@ const ProfileDropdown = ({ onClose }) => {
             </p>
           </div>
         </div>
-        <div className="mt-3 inline-block px-3 py-1 bg-white/20 rounded-full">
-          <span className="text-xs font-medium text-white">
-            {isSeller ? '🏪 Seller' : '🛍️ Buyer'}
-          </span>
-        </div>
       </div>
 
       {/* Enter Studio CTA — Sellers only */}

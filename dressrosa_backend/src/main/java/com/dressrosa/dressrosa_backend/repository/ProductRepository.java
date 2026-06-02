@@ -98,4 +98,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "WHERE p.status = :status " +
            "ORDER BY (SELECT COUNT(l) FROM Like l WHERE l.product = p) DESC, p.createdAt DESC")
     Page<Product> findPopularProducts(@Param("status") ProductStatus status, Pageable pageable);
+
+    // Count recent products (for admin dashboard)
+    long countByCreatedAtAfter(java.time.LocalDateTime since);
+
+    // Search products by title and category (for admin)
+    Page<Product> findByTitleContainingIgnoreCaseAndCategoryCategoryId(String title, Long categoryId, Pageable pageable);
 }

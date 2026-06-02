@@ -14,13 +14,14 @@ import {
 } from 'lucide-react';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import PaymentModal from '../../components/checkout/PaymentModal';
 import toast from 'react-hot-toast';
 
 const StudioBoostPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [boostingProductId, setBoostingProductId] = useState(null);
+  const [boostingProduct, setBoostingProduct] = useState(null);
 
   useEffect(() => {
     fetchMyProducts();
@@ -39,26 +40,14 @@ const StudioBoostPage = () => {
     }
   };
 
-  const handleToggleBoost = async (productId) => {
-    try {
-      setBoostingProductId(productId);
-      const updatedProduct = await productService.toggleBoost(productId);
-      
-      setProducts(prev => prev.map(p => 
-        p.productId === productId ? updatedProduct : p
-      ));
-      
-      if (updatedProduct.isBoosted) {
-        toast.success('Product boosted successfully! 🚀');
-      } else {
-        toast.success('Boost removed');
-      }
-    } catch (error) {
-      console.error('Error toggling boost:', error);
-      toast.error('Failed to update promotion status');
-    } finally {
-      setBoostingProductId(null);
-    }
+  const handleInitiateBoost = (product) => {
+    setBoostingProduct(product);
+  };
+
+  const handlePaymentSuccess = () => {
+    toast.success('Payment successful! Product is now boosted for 7 days.');
+    setBoostingProduct(null);
+    fetchMyProducts();
   };
 
   const filteredProducts = products.filter(p => 
@@ -68,6 +57,7 @@ const StudioBoostPage = () => {
   const boostedCount = products.filter(p => p.isBoosted).length;
 
   return (
+    <>
     <div className="p-8 max-w-6xl mx-auto">
       {/* Hero Section */}
       <div className="relative rounded-3xl bg-gradient-to-br from-burgundy via-burgundy-dark to-black p-10 text-white overflow-hidden mb-10 shadow-2xl">
@@ -225,29 +215,19 @@ const StudioBoostPage = () => {
                 <div className="flex items-center space-x-4 ml-6">
                   {product.isBoosted ? (
                     <button 
-                      onClick={() => handleToggleBoost(product.productId)}
-                      disabled={boostingProductId === product.productId}
-                      className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-black hover:bg-indigo-100 transition-all border border-indigo-100 flex items-center space-x-2"
+                      disabled
+                      className="px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-black transition-all border border-indigo-100 flex items-center space-x-2 opacity-60 cursor-not-allowed"
                     >
-                      {boostingProductId === product.productId ? (
-                        <div className="w-3 h-3 border-2 border-indigo-700/20 border-t-indigo-700 rounded-full animate-spin"></div>
-                      ) : (
-                        <X className="w-4 h-4" />
-                      )}
-                      <span>Stop Boost</span>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Boost Active</span>
                     </button>
                   ) : (
                     <button 
-                      onClick={() => handleToggleBoost(product.productId)}
-                      disabled={boostingProductId === product.productId}
+                      onClick={() => handleInitiateBoost(product)}
                       className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-black shadow-lg shadow-gray-900/20 hover:bg-black transition-all flex items-center space-x-2 group-hover:scale-105"
                     >
-                      {boostingProductId === product.productId ? (
-                        <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                      ) : (
-                        <Rocket className="w-4 h-4" />
-                      )}
-                      <span>Boost Now</span>
+                      <Rocket className="w-4 h-4" />
+                      <span>Boost Now (5 TND)</span>
                     </button>
                   )}
                 </div>
@@ -296,6 +276,16 @@ const StudioBoostPage = () => {
         </div>
       </div>
     </div>
+
+      {boostingProduct && (
+        <PaymentModal
+          product={boostingProduct}
+          type="BOOST"
+          onPaymentSuccess={handlePaymentSuccess}
+          onClose={() => setBoostingProduct(null)}
+        />
+      )}
+    </>
   );
 };
 

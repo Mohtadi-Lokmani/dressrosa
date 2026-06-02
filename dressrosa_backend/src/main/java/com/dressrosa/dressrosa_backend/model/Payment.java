@@ -21,8 +21,14 @@ public class Payment {
     private Long paymentId;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id", nullable = true)
     private Order order;
+    
+    @Column(name = "product_id")
+    private Long productId; // For BOOST payments
+    
+    @Column(name = "payment_type", length = 20)
+    private String paymentType = "ORDER"; // ORDER or BOOST
     
     @Column(name = "transaction_id")
     private String transactionId; // From payment provider (Stripe, etc.)

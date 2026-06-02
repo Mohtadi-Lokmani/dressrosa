@@ -49,6 +49,9 @@ public class SocialService {
     @Autowired
     private ProductVariantRepository productVariantRepository;
     
+    @Autowired
+    private OrderRepository orderRepository;
+    
    
     @Transactional
     public ApiResponse likeProduct(Long productId, Long userId) {
@@ -160,8 +163,10 @@ public class SocialService {
             throw new RuntimeException("Rating must be between 1 and 5");
         }
         
-        // TODO: Verify user bought this product
-        // (Would check if user has a DELIVERED order containing this product)
+        boolean hasPurchased = orderRepository.hasUserPurchasedProduct(userId, request.getProductId());
+        if (!hasPurchased) {
+            throw new RuntimeException("You must purchase and receive this product before reviewing it");
+        }
         
         // Create review
         Review review = new Review();
@@ -326,7 +331,7 @@ public class SocialService {
         // Add stats
         dto.setFollowersCount(followRepository.countByFollowingUserId(user.getUserId()));
         dto.setTotalProducts(productRepository.countBySellerUserId(user.getUserId()));
-        dto.setAverageRating(4.5); // TODO: Calculate from reviews
+        dto.setAverageRating(reviewRepository.getAverageRatingForSeller(user.getUserId()));
         
         return dto;
     }

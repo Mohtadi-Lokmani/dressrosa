@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Camera, Plus, Zap, ExternalLink, Edit, Share2 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
+import { getImageUrl } from '../../../utils/helpers';
 
 /**
  * AtelierHomeHeader
@@ -39,7 +40,7 @@ const AtelierHomeHeader = ({ seller, onEditCover }) => {
       <div className="relative h-52 bg-gradient-to-br from-burgundy/10 via-gray-100 to-gray-200 group">
         {seller?.bannerImage ? (
           <img
-            src={seller.bannerImage}
+            src={getImageUrl(seller.bannerImage)}
             alt="Cover"
             className="w-full h-full object-cover"
           />
@@ -69,7 +70,7 @@ const AtelierHomeHeader = ({ seller, onEditCover }) => {
             <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-burgundy to-burgundy-dark flex items-center justify-center overflow-hidden">
               {seller?.profilePhoto ? (
                 <img
-                  src={seller.profilePhoto}
+                  src={getImageUrl(seller.profilePhoto)}
                   alt={seller.userName}
                   className="w-full h-full object-cover"
                 />

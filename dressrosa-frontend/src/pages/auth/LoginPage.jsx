@@ -43,9 +43,13 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      await googleLogin(credentialResponse.credential);
+      const data = await googleLogin(credentialResponse.credential);
       toast.success('Logged in with Google successfully!');
-      navigate('/home');
+      if (data?.role === 'ADMIN' || data?.user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
     } catch (err) {
       toast.error('Google login failed. Please try again.');
     }
@@ -77,9 +81,13 @@ const LoginPage = () => {
     }
 
     try {
-      await login(formData.email.trim(), formData.password);
+      const data = await login(formData.email.trim(), formData.password);
       toast.success('Welcome back to Dressrosa!');
-      navigate('/home');
+      if (data?.role === 'ADMIN' || data?.user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
     } catch (err) {
       const msg = err.response?.data?.message || 'Incorrect credentials. Please try again.';
       setErrors({ form: msg });

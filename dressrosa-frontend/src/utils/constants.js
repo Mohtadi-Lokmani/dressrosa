@@ -1,6 +1,7 @@
 export const ROLES = {
   BUYER: 'BUYER',
   SELLER: 'SELLER',
+  ADMIN: 'ADMIN',
 };
 
 export const ORDER_STATUS = {
@@ -68,6 +69,15 @@ export const ROUTES = {
   STUDIO_BOOST: '/studio/boost',
   STUDIO_PROFILE_EDIT: '/studio/profile/edit',
   STUDIO_SETTINGS: '/studio/settings',
+
+  // Admin Dashboard
+  ADMIN_DASHBOARD: '/admin',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_PRODUCTS: '/admin/products',
+  ADMIN_ORDERS: '/admin/orders',
+  ADMIN_CATEGORIES: '/admin/categories',
+  ADMIN_REVIEWS: '/admin/reviews',
+  ADMIN_NOTIFICATIONS: '/admin/notifications',
 
   // Error
   NOT_FOUND: '*',

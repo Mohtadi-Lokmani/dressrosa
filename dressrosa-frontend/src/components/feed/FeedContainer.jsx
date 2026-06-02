@@ -46,14 +46,6 @@ const FeedContainer = ({ products, loading, hasMore, onLike }) => {
         </div>
       )}
 
-      {/* End of Feed */}
-      {!loading && !hasMore && products.length > 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
-            You've reached the end! 🎉
-          </p>
-        </div>
-      )}
     </div>
   );
 };

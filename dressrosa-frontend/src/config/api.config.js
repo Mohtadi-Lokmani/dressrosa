@@ -143,4 +143,24 @@ export const ENDPOINTS = {
     MESSAGES: '/api/messages/conversations/studio',
     BOOST: '/api/studio/boost',
   },
-};
+
+  // Admin
+  ADMIN: {
+    DASHBOARD: '/api/admin/dashboard',
+    USERS: '/api/admin/users',
+    TOGGLE_VERIFY: (userId) => `/api/admin/users/${userId}/verify`,
+    CHANGE_ROLE: (userId) => `/api/admin/users/${userId}/role`,
+    DELETE_USER: (userId) => `/api/admin/users/${userId}`,
+    PRODUCTS: '/api/admin/products',
+    DELETE_PRODUCT: (productId) => `/api/admin/products/${productId}`,
+    TOGGLE_BOOST: (productId) => `/api/admin/products/${productId}/boost`,
+    ORDERS: '/api/admin/orders',
+    UPDATE_ORDER_STATUS: (orderId) => `/api/admin/orders/${orderId}/status`,
+    CATEGORIES: '/api/admin/categories',
+    UPDATE_CATEGORY: (id) => `/api/admin/categories/${id}`,
+    DELETE_CATEGORY: (id) => `/api/admin/categories/${id}`,
+    REVIEWS: '/api/admin/reviews',
+    DELETE_REVIEW: (reviewId) => `/api/admin/reviews/${reviewId}`,
+    SEND_NOTIFICATION: '/api/admin/notifications/send',
+  },
+};

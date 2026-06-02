@@ -13,6 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { userService } from '../../services/userService';
+import { getImageUrl } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 const StudioProfileEditorPage = () => {
@@ -127,7 +128,7 @@ const StudioProfileEditorPage = () => {
             <div className="relative group mb-12">
               <div className="h-48 w-full bg-gray-100 rounded-2xl overflow-hidden relative border-2 border-dashed border-gray-200">
                 {profile.bannerImage ? (
-                  <img src={profile.bannerImage} className="w-full h-full object-cover" alt="Banner" />
+                  <img src={getImageUrl(profile.bannerImage)} className="w-full h-full object-cover" alt="Banner" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                     <ImageIcon className="w-8 h-8 mb-2" />
@@ -154,7 +155,7 @@ const StudioProfileEditorPage = () => {
                 <div className="relative">
                   <div className="w-28 h-28 rounded-full border-4 border-white overflow-hidden bg-gray-50 shadow-lg">
                     {profile.profilePhoto ? (
-                      <img src={profile.profilePhoto} className="w-full h-full object-cover" alt="Profile" />
+                      <img src={getImageUrl(profile.profilePhoto)} className="w-full h-full object-cover" alt="Profile" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300">
                         <Camera className="w-8 h-8" />

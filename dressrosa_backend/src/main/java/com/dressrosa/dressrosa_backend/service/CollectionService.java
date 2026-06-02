@@ -2,6 +2,7 @@ package com.dressrosa.dressrosa_backend.service;
 
 import com.dressrosa.dressrosa_backend.dto.collection.CollectionCreateRequest;
 import com.dressrosa.dressrosa_backend.dto.collection.CollectionResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductListResponse;
 import com.dressrosa.dressrosa_backend.model.Collection;
 import com.dressrosa.dressrosa_backend.model.CollectionItem;
 import com.dressrosa.dressrosa_backend.model.Product;
@@ -13,6 +14,7 @@ import com.dressrosa.dressrosa_backend.repository.ProductMediaRepository;
 import com.dressrosa.dressrosa_backend.repository.ProductRepository;
 import com.dressrosa.dressrosa_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,10 @@ public class CollectionService {
     @Autowired
     private ProductMediaRepository productMediaRepository;
 
+    @Autowired
+    @Lazy
+    private ProductService productService;
+
     public List<CollectionResponse> getSellerCollections(Long sellerId) {
         return collectionRepository.findBySellerUserIdOrderByCreatedAtDesc(sellerId)
                 .stream()
@@ -52,6 +58,16 @@ public class CollectionService {
         return collectionItemRepository.findByCollectionCollectionIdOrderByPositionAsc(collectionId)
                 .stream()
                 .map(ci -> ci.getProduct().getProductId())
+                .toList();
+    }
+
+    /** Public read: returns full product data for any visitor (no ownership check). */
+    public List<ProductListResponse> getCollectionProducts(Long collectionId) {
+        collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Collection not found"));
+        return collectionItemRepository.findByCollectionCollectionIdOrderByPositionAsc(collectionId)
+                .stream()
+                .map(ci -> productService.convertToListResponsePublic(ci.getProduct()))
                 .toList();
     }
 
