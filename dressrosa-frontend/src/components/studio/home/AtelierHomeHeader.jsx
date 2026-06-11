@@ -68,9 +68,9 @@ const AtelierHomeHeader = ({ seller, onEditCover }) => {
         <div className="flex items-end justify-between -mt-10 mb-4">
           <div className="relative">
             <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-burgundy to-burgundy-dark flex items-center justify-center overflow-hidden">
-              {seller?.profilePhoto ? (
+              {(seller?.profilePhoto || seller?.profileImage) ? (
                 <img
-                  src={getImageUrl(seller.profilePhoto)}
+                  src={getImageUrl(seller.profilePhoto || seller.profileImage)}
                   alt={seller.userName}
                   className="w-full h-full object-cover"
                 />

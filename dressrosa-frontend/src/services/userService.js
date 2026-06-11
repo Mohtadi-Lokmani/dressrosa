@@ -91,6 +91,14 @@ export const userService = {
     const response = await api.get(ENDPOINTS.USERS.BUYER_DASHBOARD);
     return response.data;
   },
+
+  /**
+   * Get all sellers (for suggestions)
+   */
+  getSellers: async (params = {}) => {
+    const response = await api.get(ENDPOINTS.USERS.SELLERS_LIST, { params });
+    return response.data;
+  },
 };
 
 export default userService;

@@ -20,8 +20,6 @@ public class AnalyticsService {
     @Autowired
     private ProductViewRepository productViewRepository;
 
-    @Autowired
-    private ProfileViewRepository profileViewRepository;
 
     @Autowired
     private FollowRepository followRepository;
@@ -35,7 +33,7 @@ public class AnalyticsService {
         Long revenue = rawRevenue != null ? rawRevenue.longValue() : 0L;
         Long orders = orderRepository.countBySellerUserId(sellerId);
         Long productViews = productViewRepository.countBySellerId(sellerId);
-        Long profileVisits = profileViewRepository.countBySellerId(sellerId);
+        Long profileVisits = 0L;
         Long followers = followRepository.countByFollowingUserId(sellerId);
 
         // Daily Revenue Chart

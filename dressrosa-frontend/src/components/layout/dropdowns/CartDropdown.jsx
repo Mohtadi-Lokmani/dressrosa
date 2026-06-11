@@ -6,6 +6,7 @@ import Button from '../../common/Button';
 import EmptyState from '../../common/EmptyState';
 import { formatPrice } from '../../../utils/formatters';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '../../../utils/helpers';
 
 const CartDropdown = ({ onClose }) => {
   const navigate = useNavigate();
@@ -89,7 +90,7 @@ const CartDropdown = ({ onClose }) => {
                     className="flex-shrink-0"
                   >
                     <img
-                      src={item.productImage || 'https://via.placeholder.com/80'}
+                      src={getImageUrl(item.productImage) || 'https://via.placeholder.com/80'}
                       alt={item.productTitle}
                       className="w-20 h-20 object-cover rounded-lg"
                     />

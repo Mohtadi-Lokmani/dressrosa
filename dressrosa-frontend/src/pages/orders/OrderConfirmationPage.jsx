@@ -61,7 +61,7 @@ const OrderConfirmationPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFBF9] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-burgundy/10 border-t-burgundy rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Loading your order...</p>
@@ -72,9 +72,9 @@ const OrderConfirmationPage = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#FDFBF9] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-serif text-gray-900">Order not found</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Order not found</h2>
           <button onClick={() => navigate('/orders')} className="px-6 py-3 bg-burgundy text-white rounded-xl font-bold text-sm">View All Orders</button>
         </div>
       </div>
@@ -85,7 +85,7 @@ const OrderConfirmationPage = () => {
   const paymentStatusKey = order.paymentStatus || (isCOD ? 'UNPAID' : 'PENDING');
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] pb-24">
+    <div className="min-h-screen bg-white pb-24">
       <Container className="py-12 max-w-3xl mx-auto">
 
         {/* Hero confirmation */}
@@ -93,7 +93,7 @@ const OrderConfirmationPage = () => {
           <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
             <CheckCircle className="w-10 h-10 text-emerald-500" />
           </div>
-          <h1 className="text-3xl font-serif text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {isCOD ? 'Order Confirmed!' : 'Payment Received!'}
           </h1>
           <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto leading-relaxed">
@@ -165,7 +165,7 @@ const OrderConfirmationPage = () => {
         <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-8 mb-6">
           <div className="flex items-center space-x-3 mb-6">
             <ShoppingBag className="w-5 h-5 text-burgundy" />
-            <h2 className="text-lg font-serif text-gray-900">Items in Your Order</h2>
+            <h2 className="text-lg font-bold text-gray-900">Items in Your Order</h2>
           </div>
           <div className="space-y-5">
             {order.items?.map((item) => (

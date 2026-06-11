@@ -699,7 +699,7 @@ const ProfilePage = () => {
                     {following.map((seller) => (
                       <div key={seller.userId} className="flex items-center justify-between p-2.5 bg-[#fcfcfd] rounded-xl border border-gray-200 cursor-pointer hover:border-burgundy/30 transition-colors" onClick={() => navigate(`/seller/${seller.userId}`)}>
                         <div className="flex items-center space-x-3">
-                          <Avatar src={seller.profileImage} name={seller.userName} size="sm" />
+                          <Avatar src={seller.profilePhoto || seller.profileImage} name={seller.userName} size="sm" />
                           <p className="text-xs font-black text-gray-900">{seller.userName}</p>
                         </div>
                         <ChevronRight className="w-3 h-3 text-gray-400" />

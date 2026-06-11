@@ -37,7 +37,7 @@ const HomeAside = () => {
               id: p.sellerId,
               name: p.sellerName,
               city: p.categoryName || 'Fashion',
-              image: p.sellerProfileImage,
+              image: p.sellerProfilePhoto || p.sellerProfileImage,
               followers: p.sellerFollowersCount ?? ((p.sellerId ? p.sellerId * 137 : Math.random() * 800) % 800 + 120),
               verified: p.sellerVerified
             });

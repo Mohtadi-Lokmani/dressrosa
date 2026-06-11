@@ -353,6 +353,7 @@ public class OrderService {
         response.setShippingAddress(order.getShippingAddress());
         response.setBuyerId(order.getBuyer().getUserId());
         response.setBuyerName(order.getBuyer().getUserName());
+        response.setBuyerPhone(order.getBuyer().getTelephone());
         response.setSellerId(order.getSeller().getUserId());
         response.setSellerName(order.getSeller().getUserName());
         

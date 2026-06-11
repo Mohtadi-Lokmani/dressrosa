@@ -9,7 +9,7 @@ const ReviewCard = ({ review, onDelete, canDelete = false }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar
-            src={review.buyer?.profileImage}
+            src={review.buyer?.profilePhoto || review.buyer?.profileImage}
             name={review.buyer?.userName}
             size="md"
           />

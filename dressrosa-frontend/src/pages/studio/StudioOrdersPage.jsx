@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
-  ShoppingBag, ChevronDown, Clock, CheckCircle2,
-  Truck, Package, XCircle, AlertCircle, Search
+  ShoppingBag, ChevronDown, ChevronUp, Clock, CheckCircle2,
+  Truck, Package, XCircle, MapPin, Phone, User, Tag, ChevronRight
 } from 'lucide-react';
 import { orderService } from '../../services/orderService';
 import { formatPrice, formatDate } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 import { ORDER_STATUS } from '../../utils/constants';
 import Pagination from '../../components/common/Pagination';
 import Modal from '../../components/common/Modal';
@@ -15,31 +15,31 @@ import toast from 'react-hot-toast';
 const STATUS_CONFIG = {
   PENDING: {
     label: 'Pending',
-    color: 'bg-amber-100 text-amber-700',
+    color: 'bg-amber-100 text-amber-700 border-amber-200',
     icon: Clock,
     next: ['CONFIRMED', 'CANCELLED'],
   },
   CONFIRMED: {
     label: 'Confirmed',
-    color: 'bg-blue-100 text-blue-700',
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
     icon: CheckCircle2,
     next: ['SHIPPED', 'CANCELLED'],
   },
   SHIPPED: {
     label: 'Shipped',
-    color: 'bg-purple-100 text-purple-700',
+    color: 'bg-purple-100 text-purple-700 border-purple-200',
     icon: Truck,
     next: ['DELIVERED'],
   },
   DELIVERED: {
     label: 'Delivered',
-    color: 'bg-green-100 text-green-700',
+    color: 'bg-green-100 text-green-700 border-green-200',
     icon: Package,
     next: [],
   },
   CANCELLED: {
     label: 'Cancelled',
-    color: 'bg-red-100 text-red-600',
+    color: 'bg-red-100 text-red-600 border-red-200',
     icon: XCircle,
     next: [],
   },
@@ -50,10 +50,201 @@ const FILTERS = ['ALL', ...Object.keys(STATUS_CONFIG)];
 const StatusBadge = ({ status }) => {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
   return (
-    <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide ${cfg.color}`}>
+    <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide border ${cfg.color}`}>
       <cfg.icon className="w-3 h-3" />
       <span>{cfg.label}</span>
     </span>
+  );
+};
+
+const OrderRow = ({ order, onUpdate }) => {
+  const [expanded, setExpanded] = useState(false);
+  const canUpdate = !['DELIVERED', 'CANCELLED'].includes(order.status);
+  const items = order.items || [];
+
+  return (
+    <div className="border-b border-gray-50 last:border-0">
+      {/* Summary Row */}
+      <div
+        className="grid grid-cols-[auto_1fr_8rem_5rem_5rem_6rem_7rem] gap-4 items-center px-6 py-4 hover:bg-gray-50/60 transition-colors cursor-pointer"
+        onClick={() => setExpanded(e => !e)}
+      >
+        {/* Expand Toggle */}
+        <button className="text-gray-400 hover:text-burgundy transition-colors">
+          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+
+        {/* Order / Customer */}
+        <div className="flex items-center space-x-3">
+          {/* First product thumbnail */}
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+            {items[0]?.productImage ? (
+              <img
+                src={getImageUrl(items[0].productImage)}
+                alt={items[0].productTitle}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-gray-300" />
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-black text-gray-900">#{order.orderId}</p>
+            <p className="text-xs text-gray-500 font-medium mt-0.5">
+              {order.buyerName || order.otherUserName || '—'}
+            </p>
+          </div>
+        </div>
+
+        {/* Date */}
+        <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
+
+        {/* Items count */}
+        <p className="text-sm text-gray-700 font-semibold">
+          {items.length} item{items.length !== 1 ? 's' : ''}
+        </p>
+
+        {/* Total */}
+        <p className="text-sm font-black text-gray-900">{formatPrice(order.totalAmount)}</p>
+
+        {/* Status */}
+        <StatusBadge status={order.status} />
+
+        {/* Action */}
+        <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+          {canUpdate ? (
+            <button
+              onClick={() => onUpdate(order)}
+              className="inline-flex items-center space-x-1.5 text-xs font-bold text-burgundy border border-burgundy/20 bg-burgundy/5 hover:bg-burgundy hover:text-white px-3 py-1.5 rounded-lg transition-all"
+            >
+              <span>Update</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          ) : (
+            <span className="text-xs text-gray-300 font-semibold">—</span>
+          )}
+        </div>
+      </div>
+
+      {/* Expanded Detail Panel */}
+      {expanded && (
+        <div className="bg-gray-50/60 border-t border-gray-100 px-6 py-6 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] gap-6">
+
+            {/* BUYER INFO */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Buyer Info</p>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-burgundy/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-burgundy" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-medium">Customer Name</p>
+                    <p className="text-sm font-bold text-gray-900">{order.buyerName || '—'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-medium">Phone Number</p>
+                    <p className="text-sm font-bold text-gray-900">{order.buyerPhone || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-medium">Shipping Address</p>
+                    <p className="text-sm font-bold text-gray-900 leading-snug">{order.shippingAddress || '—'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ORDER ITEMS */}
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                Products Ordered ({items.length})
+              </p>
+              <div className="space-y-4">
+                {items.map((item, idx) => (
+                  <div key={item.detailId || idx} className="flex items-center space-x-4">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
+                      {item.productImage ? (
+                        <img
+                          src={getImageUrl(item.productImage)}
+                          alt={item.productTitle}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-5 h-5 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{item.productTitle}</p>
+                      <div className="flex items-center space-x-2 mt-1 flex-wrap gap-1">
+                        {item.size && (
+                          <span className="inline-flex items-center space-x-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            <Tag className="w-2.5 h-2.5" />
+                            <span>Size: {item.size}</span>
+                          </span>
+                        )}
+                        {item.color && (
+                          <span className="inline-flex items-center space-x-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            <span>Color: {item.color}</span>
+                          </span>
+                        )}
+                        <span className="inline-flex items-center bg-burgundy/10 text-burgundy px-2 py-0.5 rounded-full text-[10px] font-bold">
+                          Qty: {item.quantity}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm font-black text-burgundy flex-shrink-0">
+                      {formatPrice(item.totalPrice)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center space-x-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${
+                    order.paymentStatus === 'PAID'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : order.paymentStatus === 'PENDING'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}>
+                    <span>{order.paymentMethod === 'BANK_CARD' ? '💳' : '💵'}</span>
+                    <span>{order.paymentMethod === 'BANK_CARD' ? 'Bank Card' : 'Cash on Delivery'}</span>
+                  </span>
+                  <span className={`inline-flex items-center text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${
+                    order.paymentStatus === 'PAID'
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : order.paymentStatus === 'PENDING'
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}>
+                    {order.paymentStatus || 'UNPAID'}
+                  </span>
+                </div>
+                <p className="text-lg font-black text-gray-900">
+                  Total: <span className="text-burgundy">{formatPrice(order.totalAmount)}</span>
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -62,7 +253,6 @@ const StudioOrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [updateModal, setUpdateModal] = useState({ show: false, orderId: null, currentStatus: '', buyerName: '' });
   const [newStatus, setNewStatus] = useState('');
@@ -82,7 +272,6 @@ const StudioOrdersPage = () => {
       }
       setOrders(items);
       setTotalPages(response.totalPages || 0);
-      setTotalElements(response.totalElements || items.length);
     } catch (error) {
       console.error(error);
       toast.error('Failed to load orders');
@@ -96,7 +285,7 @@ const StudioOrdersPage = () => {
       show: true,
       orderId: order.orderId,
       currentStatus: order.status,
-      buyerName: order.buyerName || order.otherUserName || order.buyer?.userName || 'Buyer',
+      buyerName: order.buyerName || order.otherUserName || 'Buyer',
     });
     setNewStatus(order.status);
   };
@@ -115,7 +304,6 @@ const StudioOrdersPage = () => {
     }
   };
 
-  // Summary counts
   const countByStatus = (status) => orders.filter((o) => o.status === status).length;
   const totalRevenue = orders
     .filter((o) => o.status !== ORDER_STATUS.CANCELLED)
@@ -167,7 +355,15 @@ const StudioOrdersPage = () => {
           })}
         </div>
 
-        {/* Orders Table */}
+        {/* Tip about expandable rows */}
+        {orders.length > 0 && (
+          <div className="bg-burgundy/5 border border-burgundy/10 rounded-xl px-4 py-2.5 mb-4 flex items-center space-x-2">
+            <ChevronDown className="w-3.5 h-3.5 text-burgundy flex-shrink-0" />
+            <p className="text-[11px] font-bold text-burgundy">Click any order row to expand and see full details — buyer info, phone, shipping address, and product variants.</p>
+          </div>
+        )}
+
+        {/* Orders List */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="py-20 text-center">
@@ -185,75 +381,17 @@ const StudioOrdersPage = () => {
           ) : (
             <>
               {/* Table Head */}
-              <div className="grid grid-cols-[1fr_8rem_5rem_5rem_6rem_6rem_7rem] gap-4 px-6 py-3 border-b border-gray-50 bg-gray-50/50">
-                {['Order / Customer', 'Date', 'Items', 'Total', 'Payment', 'Status', 'Action'].map((h, i) => (
-                  <p key={h} className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`}>{h}</p>
+              <div className="grid grid-cols-[auto_1fr_8rem_5rem_5rem_6rem_7rem] gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/80">
+                <div className="w-4" />
+                {['Order / Customer', 'Date', 'Items', 'Total', 'Status', 'Action'].map((h, i) => (
+                  <p key={h} className={`text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === 5 ? 'text-right' : ''}`}>{h}</p>
                 ))}
               </div>
 
-              <div className="divide-y divide-gray-50">
-                {orders.map((order) => {
-                  const canUpdate = !['DELIVERED', 'CANCELLED'].includes(order.status);
-                  return (
-                    <div
-                      key={order.orderId}
-                      className="grid grid-cols-[1fr_8rem_5rem_5rem_6rem_6rem_7rem] gap-4 items-center px-6 py-4 hover:bg-gray-50/50 transition-colors"
-                    >
-                      {/* Order / Customer */}
-                      <div>
-                        <p className="text-sm font-black text-gray-900">
-                          #{order.orderId}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {order.buyerName || order.otherUserName || '—'}
-                        </p>
-                      </div>
-
-                      {/* Date */}
-                      <p className="text-xs text-gray-500">{formatDate(order.orderDate)}</p>
-
-                      {/* Items */}
-                      <p className="text-sm text-gray-700 font-semibold">
-                        {order.itemsCount || order.items?.length || order.orderItems?.length || 0} item{(order.itemsCount || order.items?.length || order.orderItems?.length || 0) !== 1 ? 's' : ''}
-                      </p>
-
-                      {/* Total */}
-                      <p className="text-sm font-black text-gray-900">{formatPrice(order.totalAmount)}</p>
-
-                      {/* Payment */}
-                      <div>
-                        <span className={`inline-flex items-center space-x-1 text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${
-                          order.paymentStatus === 'PAID'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : order.paymentStatus === 'PENDING'
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}>
-                          <span>{order.paymentMethod === 'BANK_CARD' ? '💳' : '💵'}</span>
-                          <span>{order.paymentStatus || 'UNPAID'}</span>
-                        </span>
-                      </div>
-
-                      {/* Status */}
-                      <StatusBadge status={order.status} />
-
-                      {/* Action */}
-                      <div className="flex justify-end">
-                        {canUpdate ? (
-                          <button
-                            onClick={() => openUpdateModal(order)}
-                            className="inline-flex items-center space-x-1.5 text-xs font-bold text-burgundy border border-burgundy/20 bg-burgundy/5 hover:bg-burgundy hover:text-white px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            <span>Update</span>
-                            <ChevronDown className="w-3 h-3" />
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-300 font-semibold">—</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div>
+                {orders.map((order) => (
+                  <OrderRow key={order.orderId} order={order} onUpdate={openUpdateModal} />
+                ))}
               </div>
 
               {totalPages > 1 && (

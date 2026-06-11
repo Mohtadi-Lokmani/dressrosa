@@ -28,7 +28,7 @@ export const collectionService = {
   },
 
   getItems: async (collectionId) => {
-    const res = await api.get(ENDPOINTS.COLLECTIONS.ITEMS(collectionId));
+    const res = await api.get(ENDPOINTS.COLLECTIONS.PRODUCTS(collectionId));
     return res.data;
   },
 };

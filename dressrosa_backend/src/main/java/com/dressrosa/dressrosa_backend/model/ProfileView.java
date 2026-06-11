@@ -25,7 +25,7 @@ public class ProfileView {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "viewer_id")
-    private User viewer; // Can be null for guest views
+    private User viewer; 
 
     private String ipAddress;
 

@@ -101,7 +101,7 @@ const ProductFeedCard = ({ product, onLike, onSave }) =>  {
       {/* Post Header */}
       <div className="p-5 flex items-center justify-between bg-white relative z-20">
         <Link to={`/seller/${product.sellerId}`} className="flex items-center space-x-3 group">
-          <Avatar src={product.sellerProfileImage || undefined} name={product.sellerName || 'User'} size="md" />
+          <Avatar src={product.sellerProfilePhoto || product.sellerProfileImage || undefined} name={product.sellerName || 'User'} size="md" />
           <div>
             <div className="flex items-center space-x-1.5">
               <p className="font-bold text-gray-900 text-sm group-hover:text-burgundy transition-colors">

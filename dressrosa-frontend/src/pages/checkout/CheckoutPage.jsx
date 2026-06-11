@@ -18,6 +18,7 @@ import Container from '../../components/layout/Container';
 import { formatPrice } from '../../utils/formatters';
 import toast from 'react-hot-toast';
 import PaymentModal from '../../components/checkout/PaymentModal';
+import { getImageUrl } from '../../utils/helpers';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -121,7 +122,7 @@ const CheckoutPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFBF9] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-burgundy/10 border-t-burgundy rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Preparing Checkout...</p>
@@ -138,7 +139,7 @@ const CheckoutPage = () => {
 
   if (items.length === 0) {
     return (
-      <Container className="py-24">
+      <Container className="py-24 bg-white">
         <div className="max-w-md mx-auto text-center space-y-6">
           <div className="w-20 h-20 bg-burgundy/5 rounded-full flex items-center justify-center mx-auto">
             <ShoppingBag className="w-10 h-10 text-burgundy opacity-20" />
@@ -154,7 +155,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] pb-24">
+    <div className="min-h-screen bg-white pb-24">
       <Container className="py-10">
         {/* Navigation Header */}
         <div className="flex items-center justify-between mb-10">
@@ -163,13 +164,13 @@ const CheckoutPage = () => {
               <ArrowLeft className="w-4 h-4" />
               <span className="text-xs font-bold uppercase tracking-wider">Back to Cart</span>
             </Link>
-            <h1 className="text-4xl font-serif text-gray-900 tracking-tight">Checkout</h1>
-            <p className="text-sm text-gray-500 mt-1">Complete your order by providing your details.</p>
+            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Checkout</h1>
+            <p className="text-sm font-medium text-gray-500 mt-1">Complete your order by providing your details.</p>
           </div>
           <div className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-2xl border border-gray-100 shadow-sm">
             <ShieldCheck className="w-5 h-5 text-green-600" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-900">Secure Checkout</span>
+              <span className="text-[11px] font-bold text-gray-900">Secure Checkout</span>
               <span className="text-[9px] text-gray-400 font-medium leading-none">Your data is protected</span>
             </div>
           </div>
@@ -187,7 +188,7 @@ const CheckoutPage = () => {
                     1
                   </div>
                   <div>
-                    <h2 className="text-xl font-serif text-gray-900">Shipping Address</h2>
+                    <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
                     <p className="text-[11px] text-gray-400 font-medium">Where should we deliver your order?</p>
                   </div>
                 </div>
@@ -389,7 +390,7 @@ const CheckoutPage = () => {
                   <div key={item.cartId} className="flex items-start space-x-4 group">
                     <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
                       <img
-                        src={item.productImage || 'https://via.placeholder.com/100'}
+                        src={getImageUrl(item.productImage) || 'https://via.placeholder.com/100'}
                         alt={item.productTitle}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
@@ -430,16 +431,7 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Coupon */}
-              <div className="flex space-x-2 mb-8">
-                <input
-                  type="text" placeholder="Enter coupon code"
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-burgundy/30 transition-all placeholder:text-gray-300"
-                />
-                <button className="px-6 py-3 bg-gray-100 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
-                  Apply
-                </button>
-              </div>
+              {/* Coupon removed */}
 
               {/* CTA */}
               <button

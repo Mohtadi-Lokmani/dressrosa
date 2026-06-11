@@ -93,7 +93,8 @@ public class AuthService {
             savedUser.getUserId(),
             savedUser.getUserName(),
             savedUser.getEmail(),
-            savedUser.getRole()
+            savedUser.getRole(),
+            savedUser.getProfilePhoto()
         );
     }
    
@@ -119,7 +120,8 @@ public class AuthService {
             user.getUserId(),
             user.getUserName(),
             user.getEmail(),
-            user.getRole()
+            user.getRole(),
+            user.getProfilePhoto()
         );
     }
 
@@ -182,7 +184,8 @@ public class AuthService {
                     user.getUserId(),
                     user.getUserName(),
                     user.getEmail(),
-                    user.getRole()
+                    user.getRole(),
+                    user.getProfilePhoto()
                 );
             } else {
                 throw new RuntimeException("Invalid Google ID token");

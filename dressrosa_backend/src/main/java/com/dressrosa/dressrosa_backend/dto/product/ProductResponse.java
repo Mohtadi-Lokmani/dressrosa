@@ -26,6 +26,7 @@ public class ProductResponse {
     private Long sellerId;
     private String sellerName;
     private Boolean sellerVerified;
+    private String sellerProfilePhoto;
     
     // Media
     private List<String> imageUrls;

@@ -3,7 +3,6 @@ package com.dressrosa.dressrosa_backend.service;
 import com.dressrosa.dressrosa_backend.dto.user.*;
 import com.dressrosa.dressrosa_backend.model.User;
 import com.dressrosa.dressrosa_backend.model.ProductView;
-import com.dressrosa.dressrosa_backend.model.ProfileView;
 import com.dressrosa.dressrosa_backend.repository.*;
 import com.dressrosa.dressrosa_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +35,6 @@ public class UserService {
     @Autowired
     private ProductViewRepository productViewRepository;
 
-    @Autowired
-    private ProfileViewRepository profileViewRepository;
 
     @Autowired
     private ReviewRepository reviewRepository;
@@ -170,6 +167,12 @@ public class UserService {
         return "/uploads/photos/" + filename;
     }
   
+    public java.util.List<UserDTO> getAllSellers(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<User> sellersPage = userRepository.findByRole(com.dressrosa.dressrosa_backend.model.Role.SELLER, pageable);
+        return sellersPage.getContent().stream().map(this::convertToDTO).collect(java.util.stream.Collectors.toList());
+    }
+
     public SellerProfileDTO getSellerProfile(Long sellerId, Long viewerId, String ipAddress) {
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
@@ -190,22 +193,8 @@ public class UserService {
         dto.setAverageRating(reviewRepository.getAverageRatingForSeller(sellerId));
         dto.setOrdersCompleted(orderRepository.countBySellerUserIdAndStatus(sellerId, com.dressrosa.dressrosa_backend.model.OrderStatus.DELIVERED));
         
-        // Track view
-        trackProfileView(seller, viewerId, ipAddress);
-        
+        // Track view logic removed        
         return dto;
-    }
-    
-    private void trackProfileView(User seller, Long viewerId, String ipAddress) {
-        User viewer = viewerId != null ? userRepository.findById(viewerId).orElse(null) : null;
-        
-        ProfileView view = ProfileView.builder()
-                .seller(seller)
-                .viewer(viewer)
-                .ipAddress(ipAddress)
-                .build();
-                
-        profileViewRepository.save(view);
     }
     
   

@@ -368,6 +368,7 @@ public class SocialService {
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
         response.setSellerVerified(product.getSeller().getVerificationBadge());
+        response.setSellerProfilePhoto(product.getSeller().getProfilePhoto());
         
         // Variants (for Move All to Cart functionality)
         List<ProductVariant> variants = productVariantRepository.findByProductProductId(product.getProductId());

@@ -4,10 +4,10 @@ import { format, formatDistanceToNow } from 'date-fns';
  * Format price with currency
  */
 export const formatPrice = (price) => {
-  if (price === null || price === undefined) return '$0.00';
-  return new Intl.NumberFormat('en-US', {
+  if (price === null || price === undefined) return '0.00 TND';
+  return new Intl.NumberFormat('en-TN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'TND',
   }).format(price);
 };
 

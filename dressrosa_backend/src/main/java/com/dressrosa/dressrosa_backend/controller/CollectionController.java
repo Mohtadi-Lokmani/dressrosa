@@ -2,6 +2,7 @@ package com.dressrosa.dressrosa_backend.controller;
 
 import com.dressrosa.dressrosa_backend.dto.collection.CollectionCreateRequest;
 import com.dressrosa.dressrosa_backend.dto.collection.CollectionResponse;
+import com.dressrosa.dressrosa_backend.dto.product.ProductListResponse;
 import com.dressrosa.dressrosa_backend.dto.user.UserDTO;
 import com.dressrosa.dressrosa_backend.service.CollectionService;
 import com.dressrosa.dressrosa_backend.service.UserService;
@@ -39,6 +40,12 @@ public class CollectionController {
         UserDTO currentUser = userService.getCurrentUser(email);
         CollectionResponse created = collectionService.createCollection(currentUser.getUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /** Public endpoint — any visitor can view a collection's products. */
+    @GetMapping("/{collectionId}/products")
+    public ResponseEntity<List<ProductListResponse>> getCollectionProducts(@PathVariable Long collectionId) {
+        return ResponseEntity.ok(collectionService.getCollectionProducts(collectionId));
     }
 
     @GetMapping("/{collectionId}/items")

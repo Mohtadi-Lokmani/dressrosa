@@ -99,6 +99,14 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/sellers")
+    public ResponseEntity<java.util.List<UserDTO>> getAllSellers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        java.util.List<UserDTO> sellers = userService.getAllSellers(page, size);
+        return ResponseEntity.ok(sellers);
+    }
+
     @GetMapping("/seller/{sellerId}")
     public ResponseEntity<SellerProfileDTO> getSellerProfile(@PathVariable Long sellerId, HttpServletRequest request) {
         Long viewerId = null;

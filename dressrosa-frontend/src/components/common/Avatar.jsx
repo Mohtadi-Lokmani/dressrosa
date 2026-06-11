@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { User } from 'lucide-react';
 import { getInitials } from '../../utils/formatters';
 import { getImageUrl } from '../../utils/helpers';
@@ -12,6 +13,7 @@ const Avatar = ({
   className = '',
   ...props
 }) => {
+  const [imageError, setImageError] = useState(false);
   const sizes = {
     xs: 'w-6 h-6 text-xs',
     sm: 'w-8 h-8 text-sm',
@@ -44,10 +46,11 @@ const Avatar = ({
 
   return (
     <div className={`relative inline-block ${className}`} {...props}>
-      {src ? (
+      {src && !imageError ? (
         <img
           src={getImageUrl(src)}
           alt={alt || name || 'Avatar'}
+          onError={() => setImageError(true)}
           className={`
             ${sizes[size]}
             ${shapes[shape]}

@@ -66,6 +66,8 @@ public class ProductService {
     
     @Autowired
     private ModerationService moderationService;
+    
+    @Autowired
     private FollowRepository followRepository;
     
     @Autowired
@@ -349,6 +351,7 @@ public class ProductService {
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
         response.setSellerVerified(product.getSeller().getVerificationBadge());
+        response.setSellerProfilePhoto(product.getSeller().getProfilePhoto());
         
         // Media
         List<ProductMedia> media = productMediaRepository.findByProductProductId(product.getProductId());
@@ -414,6 +417,7 @@ public class ProductService {
         response.setSellerId(product.getSeller().getUserId());
         response.setSellerName(product.getSeller().getUserName());
         response.setSellerVerified(product.getSeller().getVerificationBadge());
+        response.setSellerProfilePhoto(product.getSeller().getProfilePhoto());
         
         // Variants (for filtering in Shop page)
         List<ProductVariant> variants = productVariantRepository.findByProductProductId(product.getProductId());
@@ -435,7 +439,8 @@ public class ProductService {
         
         return response;
     }
-    
+
+
     private ProductVariantResponse convertVariantToResponse(ProductVariant variant) {
         ProductVariantResponse response = new ProductVariantResponse();
         response.setVariantId(variant.getVariantId());

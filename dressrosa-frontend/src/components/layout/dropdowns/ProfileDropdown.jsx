@@ -2,6 +2,8 @@ import { User, Package, Heart, Settings, LogOut, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../store/authStore';
 import { ROLES } from '../../../utils/constants';
+import { getImageUrl } from '../../../utils/helpers';
+import Avatar from '../../common/Avatar';
 
 const ProfileDropdown = ({ onClose }) => {
   const { user, logout } = useAuthStore();
@@ -23,10 +25,12 @@ const ProfileDropdown = ({ onClose }) => {
       {/* User Info */}
       <div className="px-4 py-4 bg-gradient-to-r from-burgundy to-burgundy-light">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <span className="text-burgundy font-bold text-lg">
-              {user?.userName?.charAt(0).toUpperCase() || 'U'}
-            </span>
+          <div className="flex items-center justify-center">
+            <Avatar
+              src={user?.profilePhoto || user?.profileImage || undefined}
+              name={user?.userName}
+              size="lg"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-white truncate">

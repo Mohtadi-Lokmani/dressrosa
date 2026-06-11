@@ -231,7 +231,7 @@ const RegisterPage = () => {
           <div className="relative w-full h-full">
             <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl border-[12px] border-white transform rotate-3 bg-gray-200">
               <img 
-                src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200" 
+                src="https://metrostudio.in/wp-content/uploads/2024/10/123.111.cedaarandpine0014-1.jpg" 
                 alt="Artistic Fashion Illustration" 
                 className="w-full h-full object-cover"
               />

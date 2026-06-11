@@ -26,6 +26,7 @@ public class OrderListResponse {
     // Buyer and seller details
     private Long buyerId;
     private String buyerName;
+    private String buyerPhone;
     private Long sellerId;
     private String sellerName;
     private String shippingAddress;

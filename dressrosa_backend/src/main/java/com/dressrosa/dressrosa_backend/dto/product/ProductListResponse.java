@@ -30,6 +30,7 @@ public class ProductListResponse {
     private Long sellerId;
     private String sellerName;
     private Boolean sellerVerified;
+    private String sellerProfilePhoto;
     private Long likesCount;
     private Double averageRating;
     private Long reviewsCount;

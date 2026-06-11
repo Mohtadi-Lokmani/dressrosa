@@ -24,6 +24,7 @@ export const ENDPOINTS = {
     SELLER: (id) => `/api/users/seller/${id}`,
     SELLER_DASHBOARD: '/api/users/seller/dashboard',
     BUYER_DASHBOARD: '/api/users/buyer/dashboard',
+    SELLERS_LIST: '/api/users/sellers',
   },
   
   // Products
@@ -89,6 +90,7 @@ export const ENDPOINTS = {
     BY_SELLER: (sellerId) => `/api/collections/seller/${sellerId}`,
     CREATE: '/api/collections',
     ITEMS: (collectionId) => `/api/collections/${collectionId}/items`,
+    PRODUCTS: (collectionId) => `/api/collections/${collectionId}/products`,
     ADD_ITEM: (collectionId) => `/api/collections/${collectionId}/items`,
     REMOVE_ITEM: (collectionId, productId) => `/api/collections/${collectionId}/items/${productId}`,
     DELETE: (collectionId) => `/api/collections/${collectionId}`,
