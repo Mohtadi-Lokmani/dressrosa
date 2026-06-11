@@ -32,6 +32,7 @@ const ShopPage = () => {
     minPrice: searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : null,
     maxPrice: searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : null,
     minRating: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : null,
+    search: searchParams.get('search') || '',
   };
 
   const [selectedCategory, setSelectedCategory] = useState(initialCat);
@@ -54,6 +55,7 @@ const ShopPage = () => {
       minPrice: searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : null,
       maxPrice: searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : null,
       minRating: searchParams.get('ratingMin') ? Number(searchParams.get('ratingMin')) : null,
+      search: searchParams.get('search') || '',
     };
     setFilters(updatedFilters);
     setAppliedFilters(updatedFilters);
@@ -88,6 +90,7 @@ const ShopPage = () => {
       if (selectedCategory) params.categoryId = selectedCategory;
       if (appliedFilters.minPrice) params.minPrice = appliedFilters.minPrice;
       if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
+      if (appliedFilters.search) params.search = appliedFilters.search;
 
       const response = await productService.search(params);
       let filteredProducts = response.content || [];
@@ -120,6 +123,7 @@ const ShopPage = () => {
     if (filts.sizes?.length > 0) params.set('size', filts.sizes.join(','));
     if (filts.colors?.length > 0) params.set('color', filts.colors.join(','));
     if (filts.minRating) params.set('ratingMin', filts.minRating);
+    if (filts.search) params.set('search', filts.search);
     setSearchParams(params);
   };
 
@@ -131,7 +135,7 @@ const ShopPage = () => {
   };
 
   const handleClearFilters = () => {
-    const empty = { sizes: [], colors: [], minPrice: null, maxPrice: null, minRating: null };
+    const empty = { sizes: [], colors: [], minPrice: null, maxPrice: null, minRating: null, search: '' };
     setFilters(empty);
     setAppliedFilters(empty);
     setCurrentPage(0);
@@ -152,6 +156,7 @@ const ShopPage = () => {
     if (type === 'color') newFilters.colors = filters.colors.filter(c => c !== value);
     if (type === 'price') { newFilters.minPrice = null; newFilters.maxPrice = null; }
     if (type === 'rating') newFilters.minRating = null;
+    if (type === 'search') newFilters.search = '';
     
     setFilters(newFilters);
     setAppliedFilters(newFilters);
@@ -303,8 +308,14 @@ const ShopPage = () => {
         </div>
 
         {/* Active Filter Tags */}
-        {activeFilterCount > 0 && (
+        {(activeFilterCount > 0 || appliedFilters.search) && (
           <div className="flex flex-wrap items-center gap-2 mb-8">
+            {appliedFilters.search && (
+              <div className="flex items-center space-x-2 bg-burgundy text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm shadow-burgundy/10 animate-fade-in">
+                <span>Search: "{appliedFilters.search}"</span>
+                <button onClick={() => removeFilterTag('search', '')}><X className="w-3 h-3" /></button>
+              </div>
+            )}
             {appliedFilters.sizes.map(s => (
               <div key={s} className="flex items-center space-x-2 bg-[#FDF4F6] text-burgundy px-4 py-2 rounded-full border border-burgundy/5 text-[10px] font-black uppercase tracking-widest">
                 <span>{s}</span>

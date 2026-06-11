@@ -68,10 +68,21 @@ const StudioAddProductPage = () => {
       newErrors.variants = 'Missing variant.';
     }
 
+    const validLetterSizes = ['XS', 'S', 'M', 'L', 'XL', 'XLL', 'XLLL', 'XXL', 'XXXL'];
     variants.forEach((v, idx) => {
-      if (!v.size) newErrors[`variant_${idx}_size`] = 'Size must be selected.';
+      if (!v.size) {
+        newErrors[`variant_${idx}_size`] = 'Size is required.';
+      } else {
+        const sizeVal = v.size.trim().toUpperCase();
+        const isLetter = validLetterSizes.includes(sizeVal);
+        const sizeNum = parseInt(sizeVal, 10);
+        const isNum = !isNaN(sizeNum) && sizeNum >= 0 && sizeNum <= 100 && sizeNum.toString() === sizeVal;
+        
+        if (!isLetter && !isNum) {
+          newErrors[`variant_${idx}_size`] = 'Size must be XS, S, M, L, XL, XLL, XLLL or a number 0-100.';
+        }
+      }
       if (!v.quantity || parseInt(v.quantity) <= 0) newErrors[`variant_${idx}_quantity`] = 'Valid quantity is required.';
-      // Color is optional, but constrained by the select options already
     });
 
     setErrors(newErrors);
@@ -236,19 +247,18 @@ const StudioAddProductPage = () => {
                         )}
                       </div>
                       <div className="grid grid-cols-3 gap-3">
-                        {/* Size (Strict Predefined) */}
+                        {/* Size (Normal Input) */}
                         <div>
                           <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
                             size <span className="text-red-500">*</span>
                           </label>
-                          <select
+                          <input
+                            type="text"
                             value={variant.size}
+                            placeholder="e.g. M, L, 38, 40"
                             onChange={setVariant(i, 'size')}
                             className={`w-full px-3 py-2.5 bg-white border ${errors[`variant_${i}_size`] ? 'border-red-400' : 'border-gray-100'} rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-burgundy/20 transition-all`}
-                          >
-                            <option value="">Select Size</option>
-                            {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                          />
                           {errors[`variant_${i}_size`] && <span className="text-[10px] text-red-500 mt-1 block">{errors[`variant_${i}_size`]}</span>}
                         </div>
 

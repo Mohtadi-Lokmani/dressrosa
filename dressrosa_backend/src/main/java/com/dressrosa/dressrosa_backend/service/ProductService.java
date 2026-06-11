@@ -76,6 +76,8 @@ public class ProductService {
    
     @Transactional
     public ProductResponse createProduct(ProductRequest request, Long sellerId) {
+        validateVariantSizes(request.getVariants());
+        
         // ===== STEP 1: MODERATION CHECK =====
         // Check title and description for inappropriate content before publishing
         ModerationRequest moderationReq = new ModerationRequest();
@@ -273,6 +275,8 @@ public class ProductService {
    
     @Transactional
     public ProductResponse updateProduct(Long productId, ProductRequest request, Long sellerId) {
+        validateVariantSizes(request.getVariants());
+        
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         
@@ -448,5 +452,31 @@ public class ProductService {
         response.setSize(variant.getSize());
         response.setQuantity(variant.getQuantity());
         return response;
+    }
+
+    private void validateVariantSizes(List<ProductVariantRequest> variants) {
+        if (variants == null) return;
+        List<String> validLetterSizes = List.of("XS", "S", "M", "L", "XL", "XLL", "XLLL", "XXL", "XXXL");
+        for (ProductVariantRequest v : variants) {
+            if (v.getSize() == null || v.getSize().trim().isEmpty()) {
+                throw new RuntimeException("❌ Content Policy Violation: Size is required for all variants.");
+            }
+            String sizeVal = v.getSize().trim().toUpperCase();
+            boolean isLetter = validLetterSizes.contains(sizeVal);
+            
+            boolean isNum = false;
+            try {
+                int sizeNum = Integer.parseInt(sizeVal);
+                if (sizeNum >= 0 && sizeNum <= 100) {
+                    isNum = true;
+                }
+            } catch (NumberFormatException e) {
+                // Not a number
+            }
+            
+            if (!isLetter && !isNum) {
+                throw new RuntimeException("❌ Content Policy Violation: Size '" + v.getSize() + "' is invalid. Size must be XS, S, M, L, XL, XLL, XLLL or a number between 0 and 100.");
+            }
+        }
     }
 }

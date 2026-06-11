@@ -107,7 +107,7 @@ export const CATEGORY_TABS = [
   { id: 4, name: 'Shoes', slug: 'shoes' },
 ];
 
-export const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XLL', 'XLLL', ...Array.from({ length: 101 }, (_, i) => i.toString())];
 
 export const COLORS = [
   { name: 'Black', hex: '#000000' },

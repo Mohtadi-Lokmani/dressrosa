@@ -84,7 +84,7 @@ const Navbar = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-burgundy transition-colors" />
           <input
             type="text"
-            placeholder="Search products, sellers, ateliers..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-[#F8F9FA] border border-[#E9ECEF] rounded-full focus:outline-none focus:ring-2 focus:ring-burgundy/5 focus:border-burgundy/10 focus:bg-white transition-all text-sm font-medium"

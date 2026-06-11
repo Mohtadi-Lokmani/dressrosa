@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingBag, BarChart3, MessageCircle,
-  Bell, Star, Zap, Settings, ArrowLeft, ChevronRight
+  Bell, Zap, Settings, ArrowLeft, ChevronRight
 } from 'lucide-react';
 import { ROUTES } from '../../utils/constants';
 import { useAuthStore } from '../../store/authStore';
@@ -22,7 +22,6 @@ const navItems = [
       { icon: Package, label: 'Products', path: ROUTES.STUDIO_PRODUCTS },
       { icon: Package, label: 'Collections', path: ROUTES.STUDIO_COLLECTIONS },
       { icon: ShoppingBag, label: 'Orders', path: ROUTES.STUDIO_ORDERS },
-      { icon: Star, label: 'Reviews', path: ROUTES.STUDIO_REVIEWS },
     ],
   },
   {

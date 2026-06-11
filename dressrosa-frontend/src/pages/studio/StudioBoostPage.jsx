@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { productService } from '../../services/productService';
 import { formatPrice } from '../../utils/formatters';
+import { getImageUrl } from '../../utils/helpers';
 import PaymentModal from '../../components/checkout/PaymentModal';
 import toast from 'react-hot-toast';
 
@@ -179,7 +180,7 @@ const StudioBoostPage = () => {
                 <div className="flex items-center space-x-5 flex-1 min-w-0">
                   <div className="relative">
                     <img 
-                      src={product.imageUrl || '/placeholder-product.png'} 
+                      src={getImageUrl(product.imageUrl) || '/placeholder-product.png'} 
                       alt={product.title}
                       className="w-16 h-20 object-cover rounded-xl shadow-sm bg-gray-100"
                     />

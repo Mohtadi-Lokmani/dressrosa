@@ -223,7 +223,6 @@ function App() {
           <Route path="messages" element={<StudioMessagesPage />} />
           <Route path="notifications" element={<StudioNotificationsPage />} />
           <Route path="boost" element={<StudioBoostPage />} />
-          <Route path="reviews" element={<StudioComingSoon title="Reviews" description="Manage and respond to buyer reviews." />} />
           <Route path="profile/edit" element={<StudioProfileEditorPage />} />
           <Route path="settings" element={<StudioSettingsPage />} />
         </Route>

@@ -61,7 +61,7 @@ const TodoList = ({ items = [], loading }) => {
             return (
               <Link
                 key={item.id}
-                to={item.actionLink}
+                to={item.actionLink || item.actionUrl}
                 className="flex items-center space-x-4 px-6 py-4 hover:bg-gray-50/80 transition-colors group"
               >
                 {/* Icon */}

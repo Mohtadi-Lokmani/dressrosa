@@ -28,6 +28,9 @@ const StudioHomePage = () => {
       fetchSellerProfile();
       fetchRecentProducts();
       fetchTodoData();
+
+      const interval = setInterval(fetchTodoData, 5000); // Poll every 5s for real-time updates
+      return () => clearInterval(interval);
     }
   }, [user?.userId]);
 
